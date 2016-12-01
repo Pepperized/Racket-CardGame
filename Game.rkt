@@ -3,8 +3,6 @@
 (require racket/draw
          net/url)
 
-(define logo
-  (read-bitmap (get-pure-port (string->url "http://racket-lang.org/logo.png"))))
 
 
 (define frame (new frame% [label "Window"] [width 1400] [height 800]))
