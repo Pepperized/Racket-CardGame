@@ -9,8 +9,6 @@
 
 (define frame (new frame% [label "Window"] [width 1400] [height 800]))
 
-(define canvas (new canvas% [parent frame]))
-
 (void (new message% [parent frame] [label logo]))
 
  
