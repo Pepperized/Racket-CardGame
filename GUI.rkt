@@ -1,8 +1,10 @@
 #lang racket/gui
 
 (require racket/draw
-         net/url)
-(require racket/draw)
+         net/url
+         mred)
+
+(require (prefix-in htdp: 2htdp/image))
 
 (define logo
   (read-bitmap  "Image.jpg"))
@@ -13,13 +15,44 @@
                    [style '(no-resize-border)]
                    ))
 
-(define canvas (new canvas% [parent frame]))
+
 
 (void (new message% [parent frame] [label logo]))
 
- 
+
+;; Let's make a larger bitmap.
+(define scale-bitmap (λ (image sc) (let ([result
+                                          (make-bitmap (inexact->exact (round (* sc (send image get-width))))
+                                                       (inexact->exact (round (* sc (send image get-height)))
+                                                                       ))])
+                       (let ([dc (new bitmap-dc% [bitmap result])])
+                       (send dc scale sc sc)
+                       (send dc set-alpha 1)
+                       (send dc draw-bitmap logo 0 0)
+                         result
+                       ))))
+
+
+(define bitmap-canvas%
+  (class canvas%
+    (init-field [bitmap #f])
+    (init-field [bitmapX 0])
+    (init-field [bitmapY 0])
+    (init-field [bitmap-scale 1])
+    (inherit get-dc)
+    (define/override (on-paint)
+      (send (get-dc) draw-bitmap
+            (scale-bitmap bitmap bitmap-scale)
+            bitmapX bitmapY
+            ))
+    (super-new)))
+
+
+
+(define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmapX 100] [bitmap-scale 0.5]))
+
 ; Make a static text message in the frame
-(define msg (new message% [parent canvas]
+(define msg (new message% [parent frame]
                           [label "No events so far..."]))
 
 (define bottomFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
