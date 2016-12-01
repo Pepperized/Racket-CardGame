@@ -2,18 +2,24 @@
 
 (require racket/draw
          net/url)
+(require racket/draw)
 
 (define logo
   (read-bitmap  "Image.jpg"))
 
 
-(define frame (new frame% [label "Window"] [width 1400] [height 800]))
+(define frame (new frame%
+                   [label "Window"] [width 1400] [height 800]
+                   [style '(no-resize-border)]
+                   ))
+
+(define canvas (new canvas% [parent frame]))
 
 (void (new message% [parent frame] [label logo]))
 
  
 ; Make a static text message in the frame
-(define msg (new message% [parent frame]
+(define msg (new message% [parent canvas]
                           [label "No events so far..."]))
 
 (define bottomFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
@@ -47,6 +53,11 @@
 (define choice1 (new menu-item%
                      [parent menu-game] [label "New Game"] [callback (lambda (button event)
                          (send msg set-label "Button click"))]))
+  
+(define documentation (new menu-item%
+                     [parent menu-about] [label "Documentation"] [callback (lambda (button event)
+                         (send msg set-label "Docs"))]))
+
 
 (define startGUI (λ ()
                    (send frame show #t)
