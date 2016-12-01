@@ -48,7 +48,11 @@
                      [parent menu-game] [label "New Game"] [callback (lambda (button event)
                          (send msg set-label "Button click"))]))
 
+(define startGUI (λ ()
+                   (send frame show #t)
+                   ))
 
+(provide startGUI)
 
 ; Show the frame by calling its show method
-(send frame show #t)
+;(send frame show #t)
