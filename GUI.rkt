@@ -2,9 +2,12 @@
 
 (require racket/draw
          net/url
-         mred)
+         mred
+         (only-in mrlib/image-core render-image))
 
 (require (prefix-in htdp: 2htdp/image))
+
+(struct gameObject (image x y layer))
 
 (define logo
   (read-bitmap  "Image.jpg"))
@@ -17,8 +20,8 @@
 
 
 
-(void (new message% [parent frame] [label logo]))
 
+;;(define image->bitmap (λ (x) (htdp:color-list->bitmap (htdp:image->color-list x) (htdp:image-width x) (htdp:image-height x))))
 
 ;; Let's make a larger bitmap.
 (define scale-bitmap (λ (image sc) (let ([result
@@ -33,6 +36,59 @@
                        ))))
 
 
+
+
+
+(define objects '())
+(define sortedObjects '())
+
+(define addObject (λ (image x y layer)
+                    (set! objects (append objects (list (gameObject image x y layer))))
+                    (send canvas on-paint)
+                    ))
+
+(define removeObject (λ (index)
+                       (set! objects (remove (list-ref objects index) objects))
+                       (send canvas on-paint)
+                       ))
+
+(define sortObjects (λ ([count 0] [res '()]) (cond
+                                     ((= count 10) res)
+                                     (#t (let ([x '()])
+                                           (for ([i (length objects)])
+                                             (when (= count (gameObject-layer (list-ref objects i))) (set! x (append x (list (list-ref objects i)))))
+                                                                                                           
+                                           )
+                                           (sortObjects (+ count 1) (append res x))
+                                           )
+                                         )
+                                     )
+                      ))
+
+(define generateGameScene (λ () 
+                            (set! sortedObjects (sortObjects))
+                            (let ([bg (htdp:bitmap/file "Images/Other/bg.jpg")])
+                              (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 0 bg))
+                              )
+                            ))
+                            
+(define overlay (λ (i1 [i 0]) (cond
+                                       ((= i (length sortedObjects)) i1)
+                                       (#t (overlay (htdp:overlay/offset (gameObject-image (list-ref sortedObjects i)) (gameObject-x (list-ref sortedObjects i)) (gameObject-y (list-ref sortedObjects i)) i1) (+ i 1)))
+                                       )))
+                  
+
+
+
+(define (image->bitmap image)
+   (let* ([width (htdp:image-width image)]
+         [height (htdp:image-height image)]
+         [bm (make-bitmap width height)]
+          [dc (make-object bitmap-dc% bm)])
+     (send dc clear)
+     (render-image image dc 0 0)
+     bm))
+           
 (define bitmap-canvas%
   (class canvas%
     (init-field [bitmap #f])
@@ -41,15 +97,18 @@
     (init-field [bitmap-scale 1])
     (inherit get-dc)
     (define/override (on-paint)
+
       (send (get-dc) draw-bitmap
-            (scale-bitmap bitmap bitmap-scale)
+            
+            (image->bitmap (htdp:scale bitmap-scale (generateGameScene)))
             bitmapX bitmapY
-            ))
+            )
+      )
     (super-new)))
 
 
 
-(define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmapX 100] [bitmap-scale 0.5]))
+(define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmapX 200] [bitmap-scale 1] [min-height 600]))
 
 ; Make a static text message in the frame
 (define msg (new message% [parent frame]
@@ -58,6 +117,13 @@
 (define bottomFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
 
 ; Make a button in the frame
+(new button% [parent bottomFrame]
+             [label "Test"]
+             [horiz-margin 5]
+             ; Callback procedure for a button click:
+             [callback (lambda (button event)
+                         (addObject hitEffect 200 0 2))])
+
 (new button% [parent bottomFrame]
              [label "Show Hand"]
              [horiz-margin 5]
@@ -96,7 +162,25 @@
                    (send frame show #t)
                    ))
 
-(provide startGUI)
+
+
+(provide startGUI
+         addObject)
+
+(define greenUnderlay (htdp:rectangle 250 380 "solid" "green"))
+
+(define redUnderlay (htdp:rectangle 250 380 "solid" "red"))
+
+(define hitEffect (htdp:rotate 10 (htdp:scale/xy 3 4 (htdp:overlay (htdp:star-polygon 15 10 3 "solid" "red")
+                                (htdp:star-polygon 20 10 3 "solid" "yellow")  
+                                (htdp:star-polygon 20 10 3 "outline" "black")
+                                )))
+  )
 
 ; Show the frame by calling its show method
 ;(send frame show #t)
+
+(addObject (htdp:bitmap/file "image.jpg") 200 0 1)
+(addObject greenUnderlay -200 0 0)
+(addObject redUnderlay 200 0 0)
+(addObject (htdp:bitmap/file "image.jpg") -200 0 1)
