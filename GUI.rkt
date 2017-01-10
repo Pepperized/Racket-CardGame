@@ -7,7 +7,7 @@
 
 (require (prefix-in htdp: 2htdp/image))
 
-(struct gameObject (image x y layer))
+(struct gameObject (image x y scale layer))
 
 (define logo
   (read-bitmap  "Image.jpg"))
@@ -42,8 +42,8 @@
 (define objects '())
 (define sortedObjects '())
 
-(define addObject (λ (image x y layer)
-                    (set! objects (append objects (list (gameObject image x y layer))))
+(define addObject (λ (image x y scale layer)
+                    (set! objects (append objects (list (gameObject image x y scale layer))))
                     (send canvas on-paint)
                     ))
 
@@ -68,13 +68,13 @@
 (define generateGameScene (λ () 
                             (set! sortedObjects (sortObjects))
                             (let ([bg (htdp:bitmap/file "Images/Other/bg.jpg")])
-                              (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 0 bg))
+                              (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 50 bg))
                               )
                             ))
                             
 (define overlay (λ (i1 [i 0]) (cond
                                        ((= i (length sortedObjects)) i1)
-                                       (#t (overlay (htdp:overlay/offset (gameObject-image (list-ref sortedObjects i)) (gameObject-x (list-ref sortedObjects i)) (gameObject-y (list-ref sortedObjects i)) i1) (+ i 1)))
+                                       (#t (overlay (htdp:overlay/offset (htdp:scale (gameObject-scale (list-ref sortedObjects i)) (gameObject-image (list-ref sortedObjects i))) (gameObject-x (list-ref sortedObjects i)) (gameObject-y (list-ref sortedObjects i)) i1) (+ i 1)))
                                        )))
                   
 
@@ -180,7 +180,7 @@
 ; Show the frame by calling its show method
 ;(send frame show #t)
 
-(addObject (htdp:bitmap/file "image.jpg") 200 0 1)
-(addObject greenUnderlay -200 0 0)
-(addObject redUnderlay 200 0 0)
-(addObject (htdp:bitmap/file "image.jpg") -200 0 1)
+(addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
+;(addObject greenUnderlay -200 0 1 0)
+;(addObject redUnderlay 200 0 1 0)
+(addObject (htdp:bitmap/file "image.jpg") 0 -100 0.7 1)
