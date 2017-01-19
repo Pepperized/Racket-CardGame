@@ -3,36 +3,48 @@
 (require racket/draw
          net/url)
 
-(define logo
-  (read-bitmap (get-pure-port (string->url "http://racket-lang.org/logo.png"))))
+(require "Cards.rkt")
 
 
-(define frame (new frame% [label "Window"] [width 1400] [height 800]))
 
-(void (new message% [parent frame] [label logo]))
+(define deck (list
+              (getCard "Lightning")
+              (getCard "Lightning")
+              (getCard "Lightning")
+              (getCard "Lightning")
+              (getCard "Archer")
+              (getCard "Archer")
+              (getCard "Archer")
+              (getCard "Archer")
+              (getCard "Cultist")
+              (getCard "Cultist")
+              (getCard "Imp")
+              (getCard "Imp")
+              (getCard "Imp")
+              (getCard "Imp")
+              )
+  )
 
- 
-; Make a static text message in the frame
-(define msg (new message% [parent frame]
-                          [label "No events so far..."]))
- 
-; Make a button in the frame
-(new button% [parent frame]
-             [label "Click Me"]
-             ; Callback procedure for a button click:
-             [callback (lambda (button event)
-                         (send msg set-label "Button click"))])
+(define hand '())
+              
+(define drawCard (λ () (set! hand (append hand (list (list-ref deck (random (length deck))))))))
 
-(define menu-bar (new menu-bar%
-                      (parent frame)))
 
-(define file (new menu%
-     (label "&File")
-     (parent menu-bar)))
 
-(define choice1 (new menu-item%
-                     [parent file] [label "New Game"] [callback (lambda (button event)
-                         (send msg set-label "Button click"))]))
- 
-; Show the frame by calling its show method
-(send frame show #t)
+(define init (λ ()
+               (drawCard)
+               (drawCard)
+               (drawCard)
+               (drawCard)
+               )
+  )
+
+(init)
+
+(send (first hand) get-image)
+
+(provide deck
+         hand
+         init)
+
+;(init)

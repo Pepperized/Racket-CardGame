@@ -1,0 +1,50 @@
+#lang racket
+
+(require racket/class
+         racket/draw)
+
+(define card%
+  (class object%
+    (init-field [name "No Name"])
+    (init-field [mana 0])
+    (init-field [image "Images/Cards/default.jpg"])
+
+    (define/public (get-name)
+    name)
+
+    (define/public (get-image)
+    (read-bitmap image))
+
+    (define/public (get-mana)
+    mana)
+    
+    (super-new)
+    )
+  )
+ 
+(define cards '())
+
+(define addCard (λ (-name -mana [-image "Images/Cards/default.jpg"])
+                  (set! cards
+                        (append cards (list
+                                 (new card% [name -name] [mana -mana] [image (string-append "Images/Cards/" -image)])
+                                 )))))
+
+(addCard "Lightning" 1 "Lightning.png")
+(addCard "Vicious Beaver" 1 "Vicious Beaver.png")
+(addCard "Imp" 1 "Imp.png")
+(addCard "Bounce" 1 "Bounce.png")
+(addCard "Archer" 2 "Archer.png")
+(addCard "Bear" 2 "Bear.png")
+(addCard "Cull" 2 "Cull.png")
+(addCard "Magma Rager" 2 "Magma Rager.png")
+(addCard "Priestess" 2 "Priestess.png")
+(addCard "Assassin" 3 "Assassin.png")
+(addCard "Cultist" 3 "Cultist.png")
+(addCard "Paladin" 3 "Paladin.png")
+(addCard "Lava Flow" 4 "Lava Flow.png")
+
+(provide cards
+         card%)
+
+(send (list-ref cards 7) get-image)

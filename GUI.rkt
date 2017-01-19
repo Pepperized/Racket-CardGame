@@ -3,7 +3,9 @@
 (require racket/draw
          net/url
          mred
-         (only-in mrlib/image-core render-image))
+         (only-in mrlib/image-core render-image)
+         "Game.rkt"
+         "Cards.rkt")
 
 (require (prefix-in htdp: 2htdp/image))
 
@@ -129,7 +131,7 @@
              [horiz-margin 5]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
-                         (send msg set-label "Button click"))])
+                         (send handFrame show #t))])
 
 (new button% [parent bottomFrame]
              [label "End Turn"]
@@ -137,7 +139,6 @@
              ; Callback procedure for a button click:
              [callback (lambda (button event)
                          (send msg set-label "Here's your hand"))])
-
 (define menu-bar (new menu-bar%
                       (parent frame)))
 
@@ -181,6 +182,39 @@
 ;(send frame show #t)
 
 (addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
-;(addObject greenUnderlay -200 0 1 0)
+;(addObject greenUnderlay 200 0 1 2)
 ;(addObject redUnderlay 200 0 1 0)
 (addObject (htdp:bitmap/file "image.jpg") 0 -100 0.7 1)
+
+(define handFrame (new frame%
+                   [label "Window"] [width 1400] [height 300]
+                   [style '(no-resize-border)]
+                   ))
+
+           
+(define hand-canvas%
+  (class canvas%
+    (init-field [bitmap #f])
+    (init-field [bitmapX 0])
+    (init-field [bitmapY 0])
+    (init-field [bitmap-scale 1])
+    (inherit get-dc)
+    (define/override (on-paint)
+
+      (send (get-dc) draw-bitmap
+            
+            (image->bitmap (htdp:scale bitmap-scale (generateHandImage)))
+            bitmapX bitmapY
+            )
+      )
+    (super-new)))
+(define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmapX 200] [bitmap-scale 0.7] [min-height 400]))
+
+(define generateHandImage (λ () (htdp:beside
+                                 (send (first hand) get-image)
+                                 (send (second hand) get-image)
+                                 )
+                                              
+                                 )
+                            )
+                            
