@@ -79,6 +79,8 @@
   )
 
 (provide getCard
+         creature%
+         spell%
          card%)
 
 ;(send (list-ref cards 4) get-image)

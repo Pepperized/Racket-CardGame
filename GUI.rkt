@@ -203,18 +203,17 @@
 
       (send (get-dc) draw-bitmap
             
-            (image->bitmap (htdp:scale bitmap-scale (generateHandImage)))
-            bitmapX bitmapY
+            (image->bitmap (htdp:scale bitmap-scale (generateHandImage (send (first hand) get-image))))
+            bitmapX bitmapY  
             )
       )
     (super-new)))
 (define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmapX 200] [bitmap-scale 0.7] [min-height 400]))
 
-(define generateHandImage (λ () (htdp:beside
-                                 (send (first hand) get-image)
-                                 (send (second hand) get-image)
-                                 )
-                                              
-                                 )
+(define generateHandImage (λ (image [i 1]) (cond
+                                  ((= (length hand) i) image)
+                                  (#t (generateHandImage (htdp:beside image (send (list-ref hand i) get-image)) (+ i 1)))
+                                )
                             )
+  )
                             

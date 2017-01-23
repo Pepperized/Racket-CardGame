@@ -29,6 +29,15 @@
               
 (define drawCard (λ () (set! hand (append hand (list (list-ref deck (random (length deck))))))))
 
+(define creatureObject%
+  (class object%
+    (init-field [image (new creature%)])
+    (init-field [index 0])
+    (init-field [player 1])
+    
+    (super-new)
+    )
+  )
 
 
 (define init (λ ()
