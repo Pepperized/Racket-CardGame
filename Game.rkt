@@ -31,13 +31,26 @@
 
 (define creatureObject%
   (class object%
-    (init-field [image (new creature%)])
+    (init-field [card (new creature%)])
     (init-field [index 0])
     (init-field [player 1])
+
+    (define/public (get-card)
+      card)
+    (define/public (get-index)
+      index)
+    (define/public (set-index x)
+      (set! index x))
+    (define/public (get-player)
+      player)
     
     (super-new)
     )
   )
+
+(define removeCardFromHand (λ (index)
+                             (set! hand (remove (list-ref hand index) hand))
+                             ))
 
 
 (define init (λ ()
@@ -50,10 +63,16 @@
 
 (init)
 
+(define packageCardObject (λ (card)
+                        (new creatureObject% [card (first hand)] [index 0])
+                        ))
+
 (send (first hand) get-image)
 
 (provide deck
          hand
-         init)
+         init
+         packageCardObject
+         removeCardFromHand)
 
 ;(init)

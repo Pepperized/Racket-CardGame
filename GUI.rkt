@@ -5,7 +5,8 @@
          mred
          (only-in mrlib/image-core render-image)
          "Game.rkt"
-         "Cards.rkt")
+         "Cards.rkt"
+         "Helpers.rkt")
 
 (require (prefix-in htdp: 2htdp/image))
 
@@ -43,6 +44,7 @@
 
 (define objects '())
 (define sortedObjects '())
+(define creaturesPlayer1 '())
 
 (define addObject (λ (image x y scale layer)
                     (set! objects (append objects (list (gameObject image x y scale layer))))
@@ -120,11 +122,12 @@
 
 ; Make a button in the frame
 (new button% [parent bottomFrame]
-             [label "Test"]
+             [label "Play Card"]
              [horiz-margin 5]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
-                         (addObject hitEffect 200 0 2))])
+                         (playFirstCard))]
+             )
 
 (new button% [parent bottomFrame]
              [label "Show Hand"]
@@ -181,10 +184,10 @@
 ; Show the frame by calling its show method
 ;(send frame show #t)
 
-(addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
+;(addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
 ;(addObject greenUnderlay 200 0 1 2)
 ;(addObject redUnderlay 200 0 1 0)
-(addObject (htdp:bitmap/file "image.jpg") 0 -100 0.7 1)
+;(addObject (htdp:bitmap/file "image.jpg") 0 -100 0.7 1)
 
 (define handFrame (new frame%
                    [label "Window"] [width 1400] [height 300]
@@ -216,4 +219,15 @@
                                 )
                             )
   )
+
+(define playFirstCard (λ ()
+                        (let ([x (packageCardObject (first hand))])
+                          (addObject (send (send x get-card) get-image) 0 -100 0.5 1)
+                          (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
+                          (send x set-index (index-of creaturesPlayer1 x))
+                          (removeCardFromHand 0)
+                          (send hand-canvas on-paint)
+                          (send hand-canvas show #t)
+                          )
+                        ))
                             
