@@ -3,7 +3,8 @@
 
 ### Racket ###
 *~
-*.1*.bak
+*.bak
+*.1
 
 compiled/
 
