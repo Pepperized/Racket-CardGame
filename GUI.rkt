@@ -45,6 +45,19 @@
 (define objects '())
 (define sortedObjects '())
 (define creaturesPlayer1 '())
+(define creaturesPlayer2 '())
+(define CreatureObjects '())
+;(define Creature1 (new creatureObject%))
+;(define Creature2 (new creatureObject%))
+
+(define SortPlayerCreatures (λ ([x CreatureObjects] [y creaturesPlayer1] [z creaturesPlayer2])
+                              (cond
+                                ((equal? 0 (length x)) (values y z))
+                                ((equal? 1 (send (first x) get-player)) (begin
+                                                                     (append (first x) y) (SortPlayerCreatures (rest x) y z)))
+                                ((equal? 2 (send (first x) get-player)) (begin
+                                                                     (append (first x) z) (SortPlayerCreatures (rest x) y z))))))
+
 
 (define addObject (λ (image x y scale layer)
                     (set! objects (append objects (list (gameObject image x y scale layer))))
