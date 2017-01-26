@@ -125,7 +125,7 @@
 
 
 
-(define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmapX 200] [bitmap-scale 1] [min-height 600]))
+(define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmap-scale 1] [min-height 600]))
 
 ; Make a static text message in the frame
 (define msg (new message% [parent frame]
@@ -203,7 +203,7 @@
 ;(addObject (htdp:bitmap/file "image.jpg") 0 -100 0.7 1)
 
 (define handFrame (new frame%
-                   [label "Window"] [width 1400] [height 300]
+                   [label "Window"] [width 1400] [height 400]
                    [style '(no-resize-border)]
                    ))
 
@@ -216,15 +216,18 @@
     (init-field [bitmap-scale 1])
     (inherit get-dc)
     (define/override (on-paint)
-
-      (send (get-dc) draw-bitmap
+      (cond
+        
+      ((not (= 0 (length hand))) (send (get-dc) draw-bitmap
             
-            (image->bitmap (htdp:scale bitmap-scale (generateHandImage (send (first hand) get-image))))
+            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
             bitmapX bitmapY  
-            )
+            ))
+      (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
+      )
       )
     (super-new)))
-(define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmapX 200] [bitmap-scale 0.7] [min-height 400]))
+(define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmap-scale 1] [min-height 400]))
 
 (define generateHandImage (λ (image [i 1]) (cond
                                   ((= (length hand) i) image)
