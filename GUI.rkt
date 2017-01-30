@@ -108,6 +108,13 @@
             bitmapX bitmapY
             )
       )
+    
+    (define/override (on-event event)
+      (cond
+        ((send event button-down? 'left) (println (string-append "X: " (number->string (send event get-x)) ", Y: " (number->string (send event get-y)))))
+      )
+      )
+     
     (super-new)))
 
 
