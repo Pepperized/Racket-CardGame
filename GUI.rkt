@@ -213,6 +213,11 @@
       (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
       )
       )
+    (define/override (on-event event)
+      (cond
+        ((send event button-down? 'left) (playFirstCard))
+      )
+      )
     (super-new)))
 (define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmap-scale 1] [min-height 400]))
 
@@ -224,13 +229,16 @@
   )
 
 (define playFirstCard (λ ()
-                        (let ([x (packageCardObject (first hand))])
+                        (cond
+                          ((= (length hand) 0) #f)
+                        (#t (let ([x (packageCardObject (first hand))])
                           (addObject (send (send x get-card) get-image) 0 -100 0.5 1)
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
                           (removeCardFromHand 0)
                           (send hand-canvas on-paint)
                           (send hand-canvas show #t)
-                          )
+                          ))
+                        )
                         ))
                             
