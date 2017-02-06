@@ -11,7 +11,7 @@
 
 (require (prefix-in htdp: 2htdp/image))
 
-(struct gameObject (image x y scale layer))
+(struct gameObject (image x y scale layer) #:mutable)
 
 (define logo
   (read-bitmap  "Image.jpg"))
@@ -45,19 +45,20 @@
 
 (define objects '())
 (define sortedObjects '())
+(define player1ObjectIndex '())
 (define creaturesPlayer1 '())
 (define creaturesPlayer2 '())
-(define CreatureObjects '())
+(define creatureObjects '())
 ;(define Creature1 (new creatureObject%))
 ;(define Creature2 (new creatureObject%))
 
-(define SortPlayerCreatures (λ ([x CreatureObjects] [y creaturesPlayer1] [z creaturesPlayer2])
+(define sortPlayerCreatures (λ ([x creatureObjects] [y creaturesPlayer1] [z creaturesPlayer2])
                               (cond
                                 ((equal? 0 (length x)) (values y z))
                                 ((equal? 1 (send (first x) get-player)) (begin
-                                                                     (append (first x) y) (SortPlayerCreatures (rest x) y z)))
+                                                                     (set! y (append (list (first x)) y)) (sortPlayerCreatures (rest x) y z)))
                                 ((equal? 2 (send (first x) get-player)) (begin
-                                                                     (append (first x) z) (SortPlayerCreatures (rest x) y z))))))
+                                                                     (append (first x) z) (sortPlayerCreatures (rest x) y z))))))
 
 
 (define addObject (λ (image x y scale layer)
@@ -202,9 +203,6 @@
                                 )))
   )
 
-; Show the frame by calling its show method
-;(send frame show #t)
-
 ;(addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
 ;(addObject greenUnderlay 200 0 1 2)
 ;(addObject redUnderlay 200 0 1 0)
@@ -273,32 +271,68 @@
                             )
   )
 
+(define sortPlayer1CreatureIndex (λ ()
+                                   (for ([i (length sortedObjects)])
+                               (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player1Y)
+                                 (set! player1ObjectIndex (append player1ObjectIndex (list i)))))
+                                   (set! player1ObjectIndex (removed2 player1ObjectIndex))))
+(define refreshBoard (λ () 
+                          (cond
+                            ((equal? (length creaturesPlayer1) 1) #t)
+                            ((equal? (length creaturesPlayer1) 2)
+                             (sortPlayer1CreatureIndex)
+                             (set-gameObject-x! (list-ref sortedObjects (first player1ObjectIndex)) 100)
+                             (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) -100)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            ((equal? (length creaturesPlayer1) 3)
+                             (sortPlayer1CreatureIndex)
+                             (set-gameObject-x! (list-ref sortedObjects (first player1ObjectIndex)) 200)
+                             (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) 0)
+                             (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) -200)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            ((equal? (length creaturesPlayer1) 4)
+                             (sortPlayer1CreatureIndex)
+                             (set-gameObject-x! (list-ref sortedObjects (first player1ObjectIndex)) 300)
+                             (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) 100)
+                             (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) -100)
+                             (set-gameObject-x! (list-ref sortedObjects (fourth player1ObjectIndex)) -300)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            ((equal? (length creaturesPlayer1) 5)
+                             (sortPlayer1CreatureIndex)
+                             (set-gameObject-x! (list-ref sortedObjects (first player1ObjectIndex)) 400)
+                             (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) 200)
+                             (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) -0)
+                             (set-gameObject-x! (list-ref sortedObjects (fourth player1ObjectIndex)) -200)
+                             (set-gameObject-x! (list-ref sortedObjects (fifth player1ObjectIndex)) -400)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            )))
 
 (define playCard (λ (pos)
                         (let ([x (packageCardObject (list-ref hand pos))])
+                          (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
+                          (send x set-index (index-of creaturesPlayer1 x))
+                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                          (removeCardFromHand pos)
+                          (send hand-canvas on-paint)
+                          (send hand-canvas show #t)
+                          (refreshBoard)
+                          ))
+                        )      
+
+(define playFirstCard (λ ()
+                        (cond
+                          ((= (length hand) 0) #f)
+                          (#t (let ([x (packageCardObject (first hand))])
                           (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
-                          (removeCardFromHand pos)
+                          (removeCardFromHand 0)
                           (send hand-canvas on-paint)
                           (send hand-canvas show #t)
                           ))
                         )
-                        
-                            
-
-
-;(define playFirstCard (λ ()
-;                        (cond
-;                          ((= (length hand) 0) #f)
-;                          (#t (let ([x (packageCardObject (first hand))])
-;                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
-;                          (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
-;                          (send x set-index (index-of creaturesPlayer1 x))
-;                          (removeCardFromHand 0)
-;                          (send hand-canvas on-paint)
-;                          (send hand-canvas show #t)
-;                          ))
-;                        )
-;                        ))
-                            
+                        ))
