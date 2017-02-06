@@ -6,7 +6,8 @@
          (only-in mrlib/image-core render-image)
          "Game.rkt"
          "Cards.rkt"
-         "Helpers.rkt")
+         "Helpers.rkt"
+         (prefix-in config: "Config.rkt"))
 
 (require (prefix-in htdp: 2htdp/image))
 
@@ -239,7 +240,7 @@
                         (cond
                           ((= (length hand) 0) #f)
                         (#t (let ([x (packageCardObject (first hand))])
-                          (addObject (send (send x get-card) get-image) 0 -100 0.5 1)
+                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
                           (removeCardFromHand 0)
