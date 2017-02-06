@@ -234,9 +234,33 @@
       (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
       )
       )
+
+    (define/public (playClickedCard event)
+      (let ([x (send event get-x)])
+        (let ([y (send event get-y)])
+          (cond
+            ((and (< y 25) (> y 370)) #f)
+            ((equal? (length hand) 0) #f)
+            ((equal? (length hand) 1)
+             (cond ((and (>= x (first (first config:oneCardHandRange))) (<= x (second (first config:oneCardHandRange)))) (playCard 0))
+                   (#t #f))) 
+             ((equal? (length hand) 2)
+              (for ([i (length config:twoCardHandRange)])
+                (cond ((and (>= x (first (list-ref config:twoCardHandRange i))) (<= x (second (list-ref config:twoCardHandRange i)))) (playCard i)))))
+             ((equal? (length hand) 3)
+              (for ([i (length config:threeCardHandRange)])
+                (cond ((and (>= x (first (list-ref config:threeCardHandRange i))) (<= x (second (list-ref config:threeCardHandRange i))) (playCard i))))))
+             ((equal? (length hand) 4)
+              (for ([i (length config:fourCardHandRange)])
+                (cond ((and (>= x (first (list-ref config:fourCardHandRange i))) (<= x (second (list-ref config:fourCardHandRange i))) (playCard i)))))) 
+             ((equal? (length hand) 5)
+              (for ([i (length config:fiveCardHandRange)])
+                (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
+            ))))
+            
     (define/override (on-event event)
       (cond
-        ((send event button-down? 'left) (playFirstCard))
+        ((send event button-down? 'left) (playClickedCard event))
       )
       )
     (super-new)))
@@ -249,17 +273,32 @@
                             )
   )
 
-(define playFirstCard (λ ()
-                        (cond
-                          ((= (length hand) 0) #f)
-                        (#t (let ([x (packageCardObject (first hand))])
+
+(define playCard (λ (pos)
+                        (let ([x (packageCardObject (list-ref hand pos))])
                           (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
-                          (removeCardFromHand 0)
+                          (removeCardFromHand pos)
                           (send hand-canvas on-paint)
                           (send hand-canvas show #t)
                           ))
                         )
-                        ))
+                        
+                            
+
+
+;(define playFirstCard (λ ()
+;                        (cond
+;                          ((= (length hand) 0) #f)
+;                          (#t (let ([x (packageCardObject (first hand))])
+;                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+;                          (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
+;                          (send x set-index (index-of creaturesPlayer1 x))
+;                          (removeCardFromHand 0)
+;                          (send hand-canvas on-paint)
+;                          (send hand-canvas show #t)
+;                          ))
+;                        )
+;                        ))
                             
