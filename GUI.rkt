@@ -304,7 +304,7 @@
                              (sortPlayer1CreatureIndex)
                              (set-gameObject-x! (list-ref sortedObjects (first player1ObjectIndex)) 400)
                              (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) 200)
-                             (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) -0)
+                             (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) 0)
                              (set-gameObject-x! (list-ref sortedObjects (fourth player1ObjectIndex)) -200)
                              (set-gameObject-x! (list-ref sortedObjects (fifth player1ObjectIndex)) -400)
                              (send canvas on-paint)
@@ -312,7 +312,7 @@
                             )))
 
 (define playCard (λ (pos)
-                        (let ([x (packageCardObject (list-ref hand pos))])
+                        (let ([x (packageCardObject (list-ref hand pos) pos)])
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
                           (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)

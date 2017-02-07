@@ -58,13 +58,14 @@
                (drawCard)
                (drawCard)
                (drawCard)
+               (drawCard)
                )
   )
 
 (init)
 
-(define packageCardObject (λ (card)
-                        (new creatureObject% [card (first hand)] [index 0])
+(define packageCardObject (λ (card pos)
+                        (new creatureObject% [card (list-ref hand pos)] [index 0])
                         ))
 
 (send (first hand) get-image)
