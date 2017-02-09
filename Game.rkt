@@ -26,13 +26,11 @@
 (define P1hand '())
 (define P2hand '())
 
-(define P1Mana 1)
-(define P1ManaCap 1)
-(define P2Mana 0)
-(define P2ManaCap 0)
+(struct mana (currentMana manaCap) #:mutable)
+(define P1Mana (mana 1 1))
+(define P2Mana (mana 0 0))
 
 (define currentTurn 1)
-
 (define P1drawCard (λ () (set! P1hand (append P1hand (list (list-ref deck (random (length deck))))))))
 (define P2drawCard (λ () (set! P2hand (append P2hand (list (list-ref deck (random (length deck))))))))
 
@@ -91,17 +89,18 @@
                   (cond
                     ((equal? currentTurn 1)
                      (begin (set! currentTurn 2) (cond
-                                                   ((> 10 P2ManaCap) (begin (+ 1 P2ManaCap) (set! P2Mana P2ManaCap)(P2drawCard)))
-                                                   ((equal? 10 P2ManaCap) (set! P2Mana P2ManaCap)(P2drawCard)))))
+                                                   ((> 10 (mana-manaCap P2Mana)) (begin (set-mana-manaCap! P2Mana (+ 1 (mana-manaCap P2Mana)))) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) (P2drawCard))
+                                                   ((equal? 10 (mana-manaCap P2Mana)) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana))) (P2drawCard))))
                     ((equal? currentTurn 2)
                      (begin (set! currentTurn 1) (cond
-                                                  ((> 10 P1ManaCap) (begin (+ 1 P1ManaCap) (set! P1Mana P1ManaCap) (P1drawCard)))
-                                                   ((equal? 10 P1ManaCap) (set! P1Mana P1ManaCap) (P1drawCard))))))))
+                                                  ((> 10 (mana-manaCap P1Mana)) (begin (set-mana-manaCap! P1Mana (+ 1 (mana-manaCap P1Mana))) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard)))
+                                                   ((equal? 10 (mana-manaCap P1Mana)) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard))))))))
 
 (provide deck
          P1hand P2hand
          P1Mana P2Mana
-         P1ManaCap P2ManaCap
+         mana-currentMana set-mana-currentMana!
+         mana-manaCap set-mana-manaCap!
          currentTurn
          endTurn
          init

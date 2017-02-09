@@ -16,32 +16,23 @@
 (define logo
   (read-bitmap  "Image.jpg"))
 
-
 (define frame (new frame%
                    [label "Window"] [width 1400] [height 800]
-                   [style '(no-resize-border)]
-                   ))
-
-
-
+                   [style '(no-resize-border)]))
 
 ;;(define image->bitmap (λ (x) (htdp:color-list->bitmap (htdp:image->color-list x) (htdp:image-width x) (htdp:image-height x))))
 
 ;; Let's make a larger bitmap.
-(define scale-bitmap (λ (image sc) (let ([result
-                                          (make-bitmap (inexact->exact (round (* sc (send image get-width))))
-                                                       (inexact->exact (round (* sc (send image get-height)))
-                                                                       ))])
-                       (let ([dc (new bitmap-dc% [bitmap result])])
+(define scale-bitmap (λ (image sc)
+                       (let ([result
+                              (make-bitmap
+                               (inexact->exact (round (* sc (send image get-width))))
+                               (inexact->exact (round (* sc (send image get-height)))))])
+                         (let ([dc (new bitmap-dc% [bitmap result])])
                        (send dc scale sc sc)
                        (send dc set-alpha 1)
                        (send dc draw-bitmap logo 0 0)
-                         result
-                       ))))
-
-
-
-
+                         result))))
 
 (define objects '())
 (define sortedObjects '())
@@ -64,41 +55,28 @@
 
 (define addObject (λ (image x y scale layer)
                     (set! objects (append objects (list (gameObject image x y scale layer))))
-                    (send canvas on-paint)
-                    ))
+                    (send canvas on-paint)))
 
 (define removeObject (λ (index)
                        (set! objects (remove (list-ref objects index) objects))
-                       (send canvas on-paint)
-                       ))
+                       (send canvas on-paint)))
 
 (define sortObjects (λ ([count 0] [res '()]) (cond
                                      ((= count 10) res)
                                      (#t (let ([x '()])
                                            (for ([i (length objects)])
-                                             (when (= count (gameObject-layer (list-ref objects i))) (set! x (append x (list (list-ref objects i)))))
-                                                                                                           
-                                           )
-                                           (sortObjects (+ count 1) (append res x))
-                                           )
-                                         )
-                                     )
-                      ))
+                                             (when (= count (gameObject-layer (list-ref objects i))) (set! x (append x (list (list-ref objects i))))))
+                                           (sortObjects (+ count 1) (append res x)))))))
 
 (define generateGameScene (λ () 
                             (set! sortedObjects (sortObjects))
                             (let ([bg (htdp:bitmap/file "Images/Other/bg.jpg")])
                               (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 50 bg))
-                              )
-                            ))
+                              )))
                             
 (define overlay (λ (i1 [i 0]) (cond
-                                       ((= i (length sortedObjects)) i1)
-                                       (#t (overlay (htdp:overlay/offset (htdp:scale (gameObject-scale (list-ref sortedObjects i)) (gameObject-image (list-ref sortedObjects i))) (gameObject-x (list-ref sortedObjects i)) (gameObject-y (list-ref sortedObjects i)) i1) (+ i 1)))
-                                       )))
-                  
-
-
+                                ((= i (length sortedObjects)) i1)
+                                (#t (overlay (htdp:overlay/offset (htdp:scale (gameObject-scale (list-ref sortedObjects i)) (gameObject-image (list-ref sortedObjects i))) (gameObject-x (list-ref sortedObjects i)) (gameObject-y (list-ref sortedObjects i)) i1) (+ i 1))))))
 
 (define (image->bitmap image)
    (let* ([width (htdp:image-width image)]
@@ -117,23 +95,14 @@
     (init-field [bitmap-scale 1])
     (inherit get-dc)
     (define/override (on-paint)
-
       (send (get-dc) draw-bitmap
-            
             (image->bitmap (htdp:scale bitmap-scale (generateGameScene)))
-            bitmapX bitmapY
-            )
-      )
+            bitmapX bitmapY))
     
     (define/override (on-event event)
       (cond
-        ((send event button-down? 'left) (println (string-append "X: " (number->string (send event get-x)) ", Y: " (number->string (send event get-y)))))
-      )
-      )
-     
+        ((send event button-down? 'left) (println (string-append "X: " (number->string (send event get-x)) ", Y: " (number->string (send event get-y)))))))
     (super-new)))
-
-
 
 (define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmap-scale 1] [min-height 600]))
 
@@ -145,8 +114,7 @@
 
 (new button% [parent bottomFrame]
              [label "Play Card"]
-             [horiz-margin 5]
-             )
+             [horiz-margin 5])
 (new button% [parent bottomFrame]
              [label "Show Hand"]
              [horiz-margin 5]
@@ -174,10 +142,8 @@
                      [parent menu-about] [label "Documentation"] [callback (lambda (button event)
                          (send msg set-label "Docs"))]))
 
-
 (define startGUI (λ ()
-                   (send frame show #t)
-                   ))
+                   (send frame show #t)))
 
 (define greenUnderlay (htdp:rectangle 250 380 "solid" "green"))
 
@@ -186,8 +152,7 @@
 (define hitEffect (htdp:rotate 10 (htdp:scale/xy 3 4 (htdp:overlay (htdp:star-polygon 15 10 3 "solid" "red")
                                 (htdp:star-polygon 20 10 3 "solid" "yellow")  
                                 (htdp:star-polygon 20 10 3 "outline" "black")
-                                )))
-  )
+                                ))))
 
 ;(addObject (htdp:bitmap/file "image.jpg") 0 200 0.7 1)
 ;(addObject greenUnderlay 200 0 1 2)
@@ -196,10 +161,8 @@
 
 (define handFrame (new frame%
                    [label "Window"] [width 1400] [height 400]
-                   [style '(no-resize-border)]
-                   ))
+                   [style '(no-resize-border)]))
 
-           
 (define hand-canvas%
   (class canvas%
     (init-field [bitmap #f])
@@ -211,27 +174,19 @@
       (cond
         ((equal? currentTurn 1)
          (cond
-        
-           ((not (= 0 (length P1hand))) (send (get-dc) draw-bitmap
-            
-                                            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P1hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
-                                            bitmapX bitmapY  
-                                            ))
-           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
-           )
-         )
+           ((not (= 0 (length P1hand)))
+            (send (get-dc) draw-bitmap
+                  (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P1hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
+                  bitmapX bitmapY))
+           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))))
         ((equal? currentTurn 2)
          (cond
-        
-           ((not (= 0 (length P2hand))) (send (get-dc) draw-bitmap
-            
-                                            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P2hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
-                                            bitmapX bitmapY  
-                                            ))
-           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
-           )
-         )))
-
+           ((not (= 0 (length P2hand)))
+            (send (get-dc) draw-bitmap
+                  (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P2hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
+                  bitmapX bitmapY))
+           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))))))
+    
     (define/public (playClickedCard event)
       (let ([x (send event get-x)])
         (let ([y (send event get-y)])
@@ -253,8 +208,7 @@
                           (cond ((and (>= x (first (list-ref config:fourCardHandRange i))) (<= x (second (list-ref config:fourCardHandRange i))) (playCard i)))))) 
                        ((equal? (length P1hand) 5)
                         (for ([i (length config:fiveCardHandRange)])
-                          (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
-                       ))
+                          (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i))))))))
             ((equal? currentTurn 2)
                      (cond
                        ((and (< y 25) (> y 370)) #f)
@@ -273,15 +227,12 @@
                        ((equal? (length P2hand) 5)
                         (for ([i (length config:fiveCardHandRange)])
                           (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
-                       ))
-            ))))
-            
+                       ))))))
     (define/override (on-event event)
       (cond
-        ((send event button-down? 'left) (playClickedCard event))
-      )
-      )
+        ((send event button-down? 'left) (playClickedCard event))))
     (super-new)))
+
 (define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmap-scale 1] [min-height 400]))
 
 (define generateHandImage (λ (image [i 1])
@@ -289,15 +240,12 @@
                               ((equal? currentTurn 1)
                                (cond
                                  ((= (length P1hand) i) image)
-                                 (#t (generateHandImage (htdp:beside image (send (list-ref P1hand i) get-image)) (+ i 1)))
-                                 )
-                               )
+                                 (#t (generateHandImage (htdp:beside image (send (list-ref P1hand i) get-image)) (+ i 1)))))
                               ((equal? currentTurn 2)
                                (cond
                                  ((= (length P2hand) i) image)
                                  (#t (generateHandImage (htdp:beside image (send (list-ref P2hand i) get-image)) (+ i 1)))
-                                 )
-                               ))))
+                                 )))))
                             
 (define sortPlayerCreatureIndex (λ ()
                                   (cond
@@ -371,42 +319,45 @@
                              (set-gameObject-x! (list-ref sortedObjects (fourth player2ObjectIndex)) -200)
                              (set-gameObject-x! (list-ref sortedObjects (fifth player2ObjectIndex)) -400)
                              (send canvas on-paint)
-                             (send canvas show #t))))
-                         )))
+                             (send canvas show #t)))))))
 
 (define playCard (λ (pos)
                    (cond
                      ((equal? currentTurn 1)
-                      (cond
-                        ((is-a? (list-ref P1hand pos) spell%)
-                         ;(send msg set-label (string-append "Choose target: " (number->string (send (list-ref P1hand pos) get-effect))))
-                         )
-                        ((is-a? (list-ref P1hand pos) creature%)
-                         (let ([x (packageCardObject (list-ref P1hand pos) pos)])
-                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
-                           (send x set-index (index-of creaturesPlayer1 x))
-                           (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
-                           (removeCardFromHand pos)
-                           (send hand-canvas on-paint)
-                           (send hand-canvas show #t)
-                           (refreshBoard)
-                           ))
-                        ))
-                     ((equal? currentTurn 2)
-                      (cond
-                        ((is-a? (list-ref P2hand pos) spell%)
-                         ;(send msg set-label (string-append "Choose target: " (number->string (send (list-ref P2hand pos) get-effect))))
-                         )
-                        ((is-a? (list-ref P2hand pos) creature%)
-                         (let ([x (packageCardObject (list-ref P2hand pos) pos)])
-                           (set! creaturesPlayer2 (append creaturesPlayer2 (list x)))
-                           (send x set-index (index-of creaturesPlayer2 x))
-                           (addObject (send (send x get-card) get-image) 0 config:player2Y 0.5 1)
-                           (removeCardFromHand pos)
-                           (send hand-canvas on-paint)
-                           (send hand-canvas show #t)
-                           (refreshBoard)
-                           )))))))
+                      (let ([cardMana (send (list-ref P1hand pos) get-mana)])
+                        (cond
+                          ((>= (mana-currentMana P1Mana) cardMana)
+                           (cond
+                             ((is-a? (list-ref P1hand pos) spell%) #f)
+                             ((is-a? (list-ref P1hand pos) creature%)
+                              (let ([x (packageCardObject (list-ref P1hand pos) pos)])
+                                (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
+                                (send x set-index (index-of creaturesPlayer1 x))
+                                (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                                (removeCardFromHand pos)
+                                (set-mana-currentMana! P1Mana (- (mana-currentMana P1Mana) cardMana))
+                                (send hand-canvas on-paint)
+                                (send hand-canvas show #t)
+                                (refreshBoard)))))
+                          ((< (mana-currentMana P1Mana) cardMana) #f))))
+                      ((equal? currentTurn 2)
+                       (let ([cardMana (send (list-ref P2hand pos) get-mana)])
+                        (cond
+                          ((>= (mana-currentMana P2Mana) cardMana)
+                           (cond
+                             ((is-a? (list-ref P2hand pos) spell%))
+                             ((is-a? (list-ref P2hand pos) creature%)
+                              (let ([x (packageCardObject (list-ref P2hand pos) pos)])
+                                (set! creaturesPlayer2 (append creaturesPlayer2 (list x)))
+                                (send x set-index (index-of creaturesPlayer2 x))
+                                (addObject (send (send x get-card) get-image) 0 config:player2Y 0.5 1)
+                                (removeCardFromHand pos)
+                                (set-mana-currentMana! P2Mana (- (mana-currentMana P2Mana) cardMana))
+                                (send hand-canvas on-paint)
+                                (send hand-canvas show #t)
+                                (refreshBoard)))))
+                          ((< (mana-currentMana P2Mana) cardMana) #f))))
+                           )))
 
 (provide startGUI
          addObject)
