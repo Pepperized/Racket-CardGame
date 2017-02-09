@@ -5,8 +5,6 @@
 
 (require "Cards.rkt")
 
-
-
 (define deck (list
               (getCard "Lightning")
               (getCard "Lightning")
@@ -25,9 +23,27 @@
               )
   )
 
-(define hand '())
-              
-(define drawCard (λ () (set! hand (append hand (list (list-ref deck (random (length deck))))))))
+(define P1hand '())
+(define P2hand '())
+
+(define P1Mana 1)
+(define P1ManaCap 1)
+(define P2Mana 0)
+(define P2ManaCap 0)
+
+(define currentTurn 1)
+
+(define P1drawCard (λ () (set! P1hand (append P1hand (list (list-ref deck (random (length deck))))))))
+(define P2drawCard (λ () (set! P2hand (append P2hand (list (list-ref deck (random (length deck))))))))
+
+(define removeCardFromHand (λ (index)
+                             (cond
+                               ((equal? currentTurn 1)
+                                (set! P1hand (remove (list-ref P1hand index) P1hand)))
+                               ((equal? currentTurn 2)
+                                 (set! P2hand (remove (list-ref P2hand index) P2hand)))
+                               (#t (displayln "currentTurn error"))
+                               )))
 
 (define creatureObject%
   (class object%
@@ -48,32 +64,46 @@
     )
   )
 
-(define removeCardFromHand (λ (index)
-                             (set! hand (remove (list-ref hand index) hand))
-                             ))
-
-
 (define init (λ ()
-               (drawCard)
-               (drawCard)
-               (drawCard)
-               (drawCard)
-               (drawCard)
+               (P1drawCard)
+               (P1drawCard)
+               (P1drawCard)
+               (P1drawCard)
+               (P2drawCard)
+               (P2drawCard)
+               (P2drawCard)
+               (P2drawCard)
                )
   )
 
 (init)
 
 (define packageCardObject (λ (card pos)
-                        (new creatureObject% [card (list-ref hand pos)] [index 0])
-                        ))
+                            (cond
+                              ((equal? currentTurn 1)
+                               (new creatureObject% [card (list-ref P1hand pos)] [index 0] [player 1]))
+                              ((equal? currentTurn 2)
+                               (new creatureObject% [card (list-ref P2hand pos)] [index 0] [player 2]))
+                              (#t (displayln "currentTurn error"))
+                               )))
 
-(send (first hand) get-image)
+(define endTurn (λ ()
+                  (cond
+                    ((equal? currentTurn 1)
+                     (begin (set! currentTurn 2) (cond
+                                                   ((> 10 P2ManaCap) (begin (+ 1 P2ManaCap) (set! P2Mana P2ManaCap)(P2drawCard)))
+                                                   ((equal? 10 P2ManaCap) (set! P2Mana P2ManaCap)(P2drawCard)))))
+                    ((equal? currentTurn 2)
+                     (begin (set! currentTurn 1) (cond
+                                                  ((> 10 P1ManaCap) (begin (+ 1 P1ManaCap) (set! P1Mana P1ManaCap) (P1drawCard)))
+                                                   ((equal? 10 P1ManaCap) (set! P1Mana P1ManaCap) (P1drawCard))))))))
 
 (provide deck
-         hand
+         P1hand P2hand
+         P1Mana P2Mana
+         P1ManaCap P2ManaCap
+         currentTurn
+         endTurn
          init
          packageCardObject
          removeCardFromHand)
-
-;(init)

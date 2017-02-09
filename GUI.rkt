@@ -46,6 +46,7 @@
 (define objects '())
 (define sortedObjects '())
 (define player1ObjectIndex '())
+(define player2ObjectIndex '())
 (define creaturesPlayer1 '())
 (define creaturesPlayer2 '())
 (define creatureObjects '())
@@ -142,43 +143,33 @@
 
 (define bottomFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
 
-; Make a button in the frame
 (new button% [parent bottomFrame]
              [label "Play Card"]
              [horiz-margin 5]
-             ; Callback procedure for a button click:
-             [callback (lambda (button event)
-                         (playFirstCard))]
              )
-
 (new button% [parent bottomFrame]
              [label "Show Hand"]
              [horiz-margin 5]
-             ; Callback procedure for a button click:
              [callback (lambda (button event)
                          (send handFrame show #t))])
-
 (new button% [parent bottomFrame]
              [label "End Turn"]
              [horiz-margin 5]
-             ; Callback procedure for a button click:
              [callback (lambda (button event)
-                         (send msg set-label "Here's your hand"))])
+                         (begin (endTurn) (send handFrame show #f)))])
+
 (define menu-bar (new menu-bar%
                       (parent frame)))
 
 (define menu-game (new menu%
      (label "&Game")
      (parent menu-bar)))
-
 (define menu-about (new menu%
      (label "&About")
      (parent menu-bar)))
-
 (define choice1 (new menu-item%
                      [parent menu-game] [label "New Game"] [callback (lambda (button event)
                          (send msg set-label "Button click"))]))
-  
 (define documentation (new menu-item%
                      [parent menu-about] [label "Documentation"] [callback (lambda (button event)
                          (send msg set-label "Docs"))]))
@@ -187,11 +178,6 @@
 (define startGUI (λ ()
                    (send frame show #t)
                    ))
-
-
-
-(provide startGUI
-         addObject)
 
 (define greenUnderlay (htdp:rectangle 250 380 "solid" "green"))
 
@@ -223,36 +209,71 @@
     (inherit get-dc)
     (define/override (on-paint)
       (cond
+        ((equal? currentTurn 1)
+         (cond
         
-      ((not (= 0 (length hand))) (send (get-dc) draw-bitmap
+           ((not (= 0 (length P1hand))) (send (get-dc) draw-bitmap
             
-            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
-            bitmapX bitmapY  
-            ))
-      (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
-      )
-      )
+                                            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P1hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
+                                            bitmapX bitmapY  
+                                            ))
+           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
+           )
+         )
+        ((equal? currentTurn 2)
+         (cond
+        
+           ((not (= 0 (length P2hand))) (send (get-dc) draw-bitmap
+            
+                                            (image->bitmap (htdp:scale bitmap-scale (htdp:overlay (htdp:scale 0.7 (generateHandImage (send (first P2hand) get-image))) (htdp:bitmap/file "Images/Other/bg_hand.jpg"))))
+                                            bitmapX bitmapY  
+                                            ))
+           (#t (send (get-dc) draw-bitmap (image->bitmap (htdp:bitmap/file "Images/Other/bg_hand.jpg")) bitmapX bitmapY))
+           )
+         )))
 
     (define/public (playClickedCard event)
       (let ([x (send event get-x)])
         (let ([y (send event get-y)])
           (cond
-            ((and (< y 25) (> y 370)) #f)
-            ((equal? (length hand) 0) #f)
-            ((equal? (length hand) 1)
-             (cond ((and (>= x (first (first config:oneCardHandRange))) (<= x (second (first config:oneCardHandRange)))) (playCard 0)))) 
-             ((equal? (length hand) 2)
-              (for ([i (length config:twoCardHandRange)])
-                (cond ((and (>= x (first (list-ref config:twoCardHandRange i))) (<= x (second (list-ref config:twoCardHandRange i)))) (playCard i)))))
-             ((equal? (length hand) 3)
-              (for ([i (length config:threeCardHandRange)])
-                (cond ((and (>= x (first (list-ref config:threeCardHandRange i))) (<= x (second (list-ref config:threeCardHandRange i))) (playCard i))))))
-             ((equal? (length hand) 4)
-              (for ([i (length config:fourCardHandRange)])
-                (cond ((and (>= x (first (list-ref config:fourCardHandRange i))) (<= x (second (list-ref config:fourCardHandRange i))) (playCard i)))))) 
-             ((equal? (length hand) 5)
-              (for ([i (length config:fiveCardHandRange)])
-                (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
+            ((equal? currentTurn 1)
+                     (cond
+                       ((and (< y 25) (> y 370)) #f)
+                       ((equal? (length P1hand) 0) #f)
+                       ((equal? (length P1hand) 1)
+                        (cond ((and (>= x (first (first config:oneCardHandRange))) (<= x (second (first config:oneCardHandRange)))) (playCard 0)))) 
+                       ((equal? (length P1hand) 2)
+                        (for ([i (length config:twoCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:twoCardHandRange i))) (<= x (second (list-ref config:twoCardHandRange i)))) (playCard i)))))
+                       ((equal? (length P1hand) 3)
+                        (for ([i (length config:threeCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:threeCardHandRange i))) (<= x (second (list-ref config:threeCardHandRange i))) (playCard i))))))
+                       ((equal? (length P1hand) 4)
+                        (for ([i (length config:fourCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:fourCardHandRange i))) (<= x (second (list-ref config:fourCardHandRange i))) (playCard i)))))) 
+                       ((equal? (length P1hand) 5)
+                        (for ([i (length config:fiveCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
+                       ))
+            ((equal? currentTurn 2)
+                     (cond
+                       ((and (< y 25) (> y 370)) #f)
+                       ((equal? (length P2hand) 0) #f)
+                       ((equal? (length P2hand) 1)
+                        (cond ((and (>= x (first (first config:oneCardHandRange))) (<= x (second (first config:oneCardHandRange)))) (playCard 0)))) 
+                       ((equal? (length P2hand) 2)
+                        (for ([i (length config:twoCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:twoCardHandRange i))) (<= x (second (list-ref config:twoCardHandRange i)))) (playCard i)))))
+                       ((equal? (length P2hand) 3)
+                        (for ([i (length config:threeCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:threeCardHandRange i))) (<= x (second (list-ref config:threeCardHandRange i))) (playCard i))))))
+                       ((equal? (length P2hand) 4)
+                        (for ([i (length config:fourCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:fourCardHandRange i))) (<= x (second (list-ref config:fourCardHandRange i))) (playCard i)))))) 
+                       ((equal? (length P2hand) 5)
+                        (for ([i (length config:fiveCardHandRange)])
+                          (cond ((and (>= x (first (list-ref config:fiveCardHandRange i))) (<= x (second (list-ref config:fiveCardHandRange i))) (playCard i)))))) 
+                       ))
             ))))
             
     (define/override (on-event event)
@@ -263,20 +284,37 @@
     (super-new)))
 (define hand-canvas (new hand-canvas% [parent handFrame] [bitmap logo] [bitmap-scale 1] [min-height 400]))
 
-(define generateHandImage (λ (image [i 1]) (cond
-                                  ((= (length hand) i) image)
-                                  (#t (generateHandImage (htdp:beside image (send (list-ref hand i) get-image)) (+ i 1)))
-                                )
-                            )
-  )
-
-(define sortPlayer1CreatureIndex (λ ()
-                                   (for ([i (length sortedObjects)])
-                               (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player1Y)
-                                 (set! player1ObjectIndex (append player1ObjectIndex (list i)))))
-                                   (set! player1ObjectIndex (removed2 player1ObjectIndex))))
+(define generateHandImage (λ (image [i 1])
+                            (cond
+                              ((equal? currentTurn 1)
+                               (cond
+                                 ((= (length P1hand) i) image)
+                                 (#t (generateHandImage (htdp:beside image (send (list-ref P1hand i) get-image)) (+ i 1)))
+                                 )
+                               )
+                              ((equal? currentTurn 2)
+                               (cond
+                                 ((= (length P2hand) i) image)
+                                 (#t (generateHandImage (htdp:beside image (send (list-ref P2hand i) get-image)) (+ i 1)))
+                                 )
+                               ))))
+                            
+(define sortPlayerCreatureIndex (λ ()
+                                  (cond
+                                    ((equal? currentTurn 1)
+                                     (for ([i (length sortedObjects)])
+                                       (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player1Y)
+                                         (set! player1ObjectIndex (append player1ObjectIndex (list i)))))
+                                     (set! player1ObjectIndex (removed2 player1ObjectIndex)))
+                                    ((equal? currentTurn 2)
+                                     (for ([i (length sortedObjects)])
+                                       (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player2Y)
+                                         (set! player2ObjectIndex (append player2ObjectIndex (list i)))))
+                                     (set! player2ObjectIndex (removed2 player2ObjectIndex))))))
 (define refreshBoard (λ ()
-                       (sortPlayer1CreatureIndex)
+                       (sortPlayerCreatureIndex)
+                       (cond
+                         ((equal? currentTurn 1)
                           (cond
                             ((equal? (length creaturesPlayer1) 1) #t)
                             ((equal? (length creaturesPlayer1) 2)
@@ -304,36 +342,71 @@
                              (set-gameObject-x! (list-ref sortedObjects (fourth player1ObjectIndex)) -200)
                              (set-gameObject-x! (list-ref sortedObjects (fifth player1ObjectIndex)) -400)
                              (send canvas on-paint)
+                             (send canvas show #t))))
+                         ((equal? currentTurn 2)
+                          (cond
+                            ((equal? (length creaturesPlayer2) 1) #t)
+                            ((equal? (length creaturesPlayer2) 2)
+                             (set-gameObject-x! (list-ref sortedObjects (first player2ObjectIndex)) 100)
+                             (set-gameObject-x! (list-ref sortedObjects (second player2ObjectIndex)) -100)
+                             (send canvas on-paint)
                              (send canvas show #t))
-                            )))
+                            ((equal? (length creaturesPlayer2) 3)
+                             (set-gameObject-x! (list-ref sortedObjects (first player2ObjectIndex)) 200)
+                             (set-gameObject-x! (list-ref sortedObjects (second player2ObjectIndex)) 0)
+                             (set-gameObject-x! (list-ref sortedObjects (third player2ObjectIndex)) -200)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            ((equal? (length creaturesPlayer2) 4)
+                             (set-gameObject-x! (list-ref sortedObjects (first player2ObjectIndex)) 300)
+                             (set-gameObject-x! (list-ref sortedObjects (second player2ObjectIndex)) 100)
+                             (set-gameObject-x! (list-ref sortedObjects (third player2ObjectIndex)) -100)
+                             (set-gameObject-x! (list-ref sortedObjects (fourth player2ObjectIndex)) -300)
+                             (send canvas on-paint)
+                             (send canvas show #t))
+                            ((equal? (length creaturesPlayer2) 5)
+                             (set-gameObject-x! (list-ref sortedObjects (first player2ObjectIndex)) 400)
+                             (set-gameObject-x! (list-ref sortedObjects (second player2ObjectIndex)) 200)
+                             (set-gameObject-x! (list-ref sortedObjects (third player2ObjectIndex)) 0)
+                             (set-gameObject-x! (list-ref sortedObjects (fourth player2ObjectIndex)) -200)
+                             (set-gameObject-x! (list-ref sortedObjects (fifth player2ObjectIndex)) -400)
+                             (send canvas on-paint)
+                             (send canvas show #t))))
+                         )))
 
 (define playCard (λ (pos)
                    (cond
-                     ((is-a? (list-ref hand pos) spell%)
-                      ;(send msg set-label (string-append "Choose target: " (number->string (send (list-ref hand pos) get-effect))))
-                      )
-                     ((is-a? (list-ref hand pos) creature%)
-                      (let ([x (packageCardObject (list-ref hand pos) pos)])
-                        (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
-                        (send x set-index (index-of creaturesPlayer1 x))
-                        (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
-                        (removeCardFromHand pos)
-                        (send hand-canvas on-paint)
-                        (send hand-canvas show #t)
-                        (refreshBoard)
+                     ((equal? currentTurn 1)
+                      (cond
+                        ((is-a? (list-ref P1hand pos) spell%)
+                         ;(send msg set-label (string-append "Choose target: " (number->string (send (list-ref P1hand pos) get-effect))))
+                         )
+                        ((is-a? (list-ref P1hand pos) creature%)
+                         (let ([x (packageCardObject (list-ref P1hand pos) pos)])
+                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
+                           (send x set-index (index-of creaturesPlayer1 x))
+                           (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                           (removeCardFromHand pos)
+                           (send hand-canvas on-paint)
+                           (send hand-canvas show #t)
+                           (refreshBoard)
+                           ))
                         ))
-                     )))
+                     ((equal? currentTurn 2)
+                      (cond
+                        ((is-a? (list-ref P2hand pos) spell%)
+                         ;(send msg set-label (string-append "Choose target: " (number->string (send (list-ref P2hand pos) get-effect))))
+                         )
+                        ((is-a? (list-ref P2hand pos) creature%)
+                         (let ([x (packageCardObject (list-ref P2hand pos) pos)])
+                           (set! creaturesPlayer2 (append creaturesPlayer2 (list x)))
+                           (send x set-index (index-of creaturesPlayer2 x))
+                           (addObject (send (send x get-card) get-image) 0 config:player2Y 0.5 1)
+                           (removeCardFromHand pos)
+                           (send hand-canvas on-paint)
+                           (send hand-canvas show #t)
+                           (refreshBoard)
+                           )))))))
 
-(define playFirstCard (λ ()
-                        (cond
-                          ((= (length hand) 0) #f)
-                          (#t (let ([x (packageCardObject (first hand))])
-                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
-                          (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
-                          (send x set-index (index-of creaturesPlayer1 x))
-                          (removeCardFromHand 0)
-                          (send hand-canvas on-paint)
-                          (send hand-canvas show #t)
-                          ))
-                        )
-                        ))
+(provide startGUI
+         addObject)
