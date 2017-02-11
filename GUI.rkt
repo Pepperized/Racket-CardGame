@@ -456,7 +456,7 @@
              [label "End Turn"]
              [horiz-margin 5]
              [callback (lambda (button event)
-                         (begin (endTurn) (send handFrame show #f)
+                         (begin (send handFrame show #f)
                                 (cond
                                   ((equal? currentTurn 1)
                                    (if (not (equal? (spellStruct-name activeSpell) "none")) (cancelSpell) #f)
@@ -467,7 +467,8 @@
                                    (if (not (equal? (spellStruct-name activeSpell) "none")) (cancelSpell) #f)
                                    (for ([i (length creaturesPlayer2)])
                                      (when (equal? (send (send (list-ref creaturesPlayer2 i) get-card) get-sleep) #t)
-                                       (send (send (list-ref creaturesPlayer2 i) get-card) set-sleep #f)))))))])
+                                       (send (send (list-ref creaturesPlayer2 i) get-card) set-sleep #f)))))
+                                (endTurn)))])
 
 (define menu-bar (new menu-bar%
                       (parent frame)))
