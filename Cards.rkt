@@ -37,12 +37,14 @@
   (class card%
     (init-field [attack 0])
     (init-field [life 0])
-
+    (init-field [sleep #t])
     (init-field [on-play-effect "none"])
 
     (define/public (get-attack) attack)
     (define/public (get-life) life)
     (define/public (get-on-play-effect) on-play-effect)
+    (define/public (get-sleep) sleep)
+    (define/public (set-sleep x) (set! sleep x))
     
     (super-new)
     )
