@@ -31,6 +31,9 @@
 (define P2Mana (mana 0 0))
 
 (define currentTurn 1)
+(struct spellStruct (name effect) #:mutable)
+(define activeSpell (spellStruct "none" "none"))
+
 (define P1drawCard (λ () (set! P1hand (append P1hand (list (list-ref deck (random (length deck))))))))
 (define P2drawCard (λ () (set! P2hand (append P2hand (list (list-ref deck (random (length deck))))))))
 
@@ -84,7 +87,16 @@
                                (new creatureObject% [card (list-ref P2hand pos)] [index 0] [player 2]))
                               (#t (displayln "currentTurn error"))
                                )))
-
+(define cancelSpell (λ ()
+                      (cond
+                        ((equal? currentTurn 1)
+                         (set! P1hand (append P1hand (list (getCard (spellStruct-name activeSpell)))))
+                         (set-spellStruct-name! activeSpell "none")
+                         (set-spellStruct-effect! activeSpell "none"))
+                        ((equal? currentTurn 2)
+                         (set! P2hand (append P2hand (list (getCard (spellStruct-name activeSpell)))))
+                         (set-spellStruct-name! activeSpell "none")
+                         (set-spellStruct-effect! activeSpell "none")))))
 (define endTurn (λ ()
                   (cond
                     ((equal? currentTurn 1)
@@ -102,6 +114,7 @@
          mana-currentMana set-mana-currentMana!
          mana-manaCap set-mana-manaCap!
          currentTurn
+         cancelSpell activeSpell set-spellStruct-name! spellStruct-name set-spellStruct-effect! spellStruct-effect
          endTurn
          init
          packageCardObject

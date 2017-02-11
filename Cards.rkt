@@ -55,9 +55,8 @@
 (define addCard (λ (card)
                   (set! cards
                         (append cards (list
-                                 card
-                                 )))))
-
+                                 card)))))
+                          
 (addCard (new spell% [name "Lightning"] [mana 1] [image "Lightning.png"]))
 (addCard (new creature% [name "Vicious Beaver"] [mana 1] [image "Vicious Beaver.png"]))
 (addCard (new creature% [name "Imp"] [mana 1] [image "Imp.png"]))
@@ -76,9 +75,7 @@
                             ((= 0 (length card-list)) (error "Failed to find card."))
                             ((equal? name (send (first card-list) get-name)) (first card-list))
                             (#t (getCard name (rest card-list)))
-                            )
-                  )
-  )
+                            )))
 
 (provide getCard
          creature%
