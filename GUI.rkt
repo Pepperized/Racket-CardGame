@@ -11,7 +11,7 @@
 
 (require (prefix-in htdp: 2htdp/image))
 
-(struct gameObject (image x y scale layer) #:mutable)
+(struct gameObject (image x y scale layer player) #:mutable)
 
 (define logo
   (read-bitmap  "Image.jpg"))
@@ -42,6 +42,7 @@
 
 
 
+(define turn 1)
 
 (define objects '())
 (define sortedObjects '())
@@ -61,8 +62,8 @@
                                                                      (append (first x) z) (sortPlayerCreatures (rest x) y z))))))
 
 
-(define addObject (λ (image x y scale layer)
-                    (set! objects (append objects (list (gameObject image x y scale layer))))
+(define addObject (λ (image x y scale layer [player 0])
+                    (set! objects (append objects (list (gameObject image x y scale layer player))))
                     (send canvas on-paint)
                     ))
 
@@ -163,7 +164,12 @@
              [horiz-margin 5]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
-                         (send msg set-label "Here's your hand"))])
+                         (cond
+                           ((= turn 1) (set! turn 2))
+                           ((= turn 2) (set! turn 1))
+                           )
+                         (refreshBoard)
+                         )])
 (define menu-bar (new menu-bar%
                       (parent frame)))
 
@@ -272,8 +278,11 @@
 
 (define sortPlayer1CreatureIndex (λ ()
                                    (for ([i (length sortedObjects)])
-                               (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player1Y)
-                                 (set! player1ObjectIndex (append player1ObjectIndex (list i)))))
+                               (when (equal? (gameObject-player (list-ref sortedObjects i)) 1)
+                                 (begin
+                                   (set! player1ObjectIndex (append player1ObjectIndex (list i)))
+                                   (set-gameObject-y! (list-ref sortedObjects i) (getPlayerY 1))
+                                   )))
                                    (set! player1ObjectIndex (removed2 player1ObjectIndex))))
 (define refreshBoard (λ ()
                        (sortPlayer1CreatureIndex)
@@ -316,7 +325,7 @@
                       (let ([x (packageCardObject (list-ref hand pos) pos)])
                         (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                         (send x set-index (index-of creaturesPlayer1 x))
-                        (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                        (addObject (send (send x get-card) get-image) 0 (getPlayerY 1) 0.5 1 1)
                         (removeCardFromHand pos)
                         (send hand-canvas on-paint)
                         (send hand-canvas show #t)
@@ -328,7 +337,7 @@
                         (cond
                           ((= (length hand) 0) #f)
                           (#t (let ([x (packageCardObject (first hand))])
-                          (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                          (addObject (send (send x get-card) get-image) 0 (getPlayerY 1) 0.5 1 1)
                           (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                           (send x set-index (index-of creaturesPlayer1 x))
                           (removeCardFromHand 0)
@@ -337,3 +346,8 @@
                           ))
                         )
                         ))
+
+(define getPlayerY (λ (player) (cond
+                                 ((= turn player) config:currentPlayerY)
+                                 (#t config:otherPlayerY)
+                                 )))
