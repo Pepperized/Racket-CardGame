@@ -1,8 +1,9 @@
 #lang racket
 
-(define player1Y -100)
-(define player2Y 200)
+(define currentPlayerY -100)
+(define enemyPlayerY 200)
 (define noCreature 10)
+(define maxMana 5)
 
 (define fiveCardHandRange  (list (list 55 295)  (list 320 555) (list 580 820) (list 840 1080) (list 1105 1345)))
 (define fourCardHandRange  (list (list 185 425) (list 450 685) (list 710 950) (list 975 1210)))
@@ -16,7 +17,16 @@
 (define fourCreatureBoardRange  (list (list 315 485) (list 515 685) (list 715 885) (list 915 1085)))
 (define fiveCreatureBoardRange  (list (list 215 385) (list 415 585) (list 615 785) (list 815 985) (list 1015 1185)))
 
-(define player1Y-BoardRange (list 375 620))
-(define player2Y-BoardRange (list 75 320))
+(define currentPlayerY-BoardRange (list 375 620))
+(define enemyPlayerY-BoardRange (list 75 320))
+
+(define player1SelectedFriendlyCreature (λ (lst)
+                                  (first (first lst))))
+(define player1SelectedEnemyCreature (λ (lst)
+                                   (second (first lst))))
+(define player2SelectedFriendlyCreature (λ (lst)
+                                  (second (second lst))))
+(define player2SelectedEnemyCreature (λ (lst)
+                                   (first (second lst))))
 
 (provide (all-defined-out))

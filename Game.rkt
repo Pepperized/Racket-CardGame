@@ -3,7 +3,8 @@
 (require racket/draw
          net/url)
 
-(require "Cards.rkt")
+(require "Cards.rkt"
+         (prefix-in config: "Config.rkt"))
 
 (define deck (list
               (getCard "Lightning")
@@ -73,7 +74,6 @@
                (P2drawCard)
                (P2drawCard)
                (P2drawCard)
-               (P2drawCard)
                )
   )
 
@@ -97,16 +97,24 @@
                          (set! P2hand (append P2hand (list (getCard (spellStruct-name activeSpell)))))
                          (set-spellStruct-name! activeSpell "none")
                          (set-spellStruct-effect! activeSpell "none")))))
-(define endTurn (λ ()
+(define endTurn (λ (manaDisplay)
                   (cond
                     ((equal? currentTurn 1)
-                     (begin (set! currentTurn 2) (cond
-                                                   ((> 10 (mana-manaCap P2Mana)) (begin (set-mana-manaCap! P2Mana (+ 1 (mana-manaCap P2Mana)))) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) (P2drawCard))
-                                                   ((equal? 10 (mana-manaCap P2Mana)) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana))) (P2drawCard))))
+                     (begin (set! currentTurn 2)
+                            (cond
+                              ((> config:maxMana (mana-manaCap P2Mana)) (begin (set-mana-manaCap! P2Mana (+ 1 (mana-manaCap P2Mana)))) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) (P2drawCard))
+                              ((equal? config:maxMana (mana-manaCap P2Mana)) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) 
+                                                                             (cond
+                                                                               ((not (>= (length P1hand) 5)) (P2drawCard)))))
+                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))))
                     ((equal? currentTurn 2)
-                     (begin (set! currentTurn 1) (cond
-                                                  ((> 10 (mana-manaCap P1Mana)) (begin (set-mana-manaCap! P1Mana (+ 1 (mana-manaCap P1Mana))) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard)))
-                                                   ((equal? 10 (mana-manaCap P1Mana)) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard))))))))
+                     (begin (set! currentTurn 1)
+                            (cond
+                              ((> config:maxMana (mana-manaCap P1Mana)) (begin (set-mana-manaCap! P1Mana (+ 1 (mana-manaCap P1Mana))) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard)))
+                              ((equal? config:maxMana (mana-manaCap P1Mana)) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) 
+                                                                             (cond
+                                                                               ((not (>= (length P1hand) 5)) (P1drawCard)))))
+                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana)))))))))
 
 (provide deck
          P1hand P2hand

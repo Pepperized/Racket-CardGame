@@ -19,6 +19,8 @@
 (define frame (new frame%
                    [label "Window"] [width 1400] [height 800]
                    [style '(no-resize-border)]))
+(define convertCoords (λ (x)
+                        (- x 700)))
 
 ;;(define image->bitmap (λ (x) (htdp:color-list->bitmap (htdp:image->color-list x) (htdp:image-width x) (htdp:image-height x))))
 
@@ -42,8 +44,8 @@
 (define creaturesPlayer2 '())
 (define creatureObjects '())                                                                                                                 ;creature(Objects) selected by P1               ;creatureObjects selected by P2
 
-(define selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))) ; format: '( '(P1CreatureObjectIndex P2CreatureObjectIndex) '(P1CreatureObjectIndex P2CreatureObjectIndex) )
-(define selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))       ; format: '( '(P1selectedCreature P2selectedCreature) '(P1selectedCreature P2SelectedCreature) )
+(define indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))) ; format: '( '(P1CreatureObjectIndex P2CreatureObjectIndex) '(P1CreatureObjectIndex P2CreatureObjectIndex) )
+(define selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))       ; format: '( '(P1selectedCreature P2selectedCreature) '(P1selectedCreature P2SelectedCreature) )
 
 (define sortPlayerCreatures (λ ([x creatureObjects] [y creaturesPlayer1] [z creaturesPlayer2])
                               (cond
@@ -111,329 +113,48 @@
     
     (define/override (on-event event)
       (cond
-        ((send event button-down? 'left) (println (string-append "X: " (number->string (send event get-x)) ", Y: " (number->string (send event get-y)))) (selectBoardCreature event))
+        ((send event button-down? 'left) (displayln (string-append "X: " (number->string (send event get-x)) ", Y: " (number->string (send event get-y)))) (selectBoardCreature event))
         ((send event button-down? 'right) (begin
+                                         (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                          (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                                         (set! selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                          (cond
                                            ((not (equal? (spellStruct-name activeSpell) "none")) (cancelSpell) (send hand-canvas on-paint) ))))))
                                       
-    (define/public selectBoardCreature (λ (event)
-                              (let ([x (send event get-x)])
-                                (let ([y (send event get-y)])
-                                  (cond
-                                    ((equal? currentTurn 1) 
-                                     (cond
-                                       ((and (> y (first config:player1Y-BoardRange)) (< y (second config:player1Y-BoardRange)))
-                                        (cond
-                                          ((equal? (spellStruct-name activeSpell) "none")
-                                           (cond
-                                             ((equal? (length creaturesPlayer1) 1)
-                                              (cond
-                                                ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                 (set! selectedCreatureObjects (append (list (cons (first player1ObjectIndex) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                 (set! selectedCreatures (append (list (cons (first creaturesPlayer1) (rest (first selectedCreatures)))) (rest selectedCreatures))))))
-                                             ((equal? (length creaturesPlayer1) 2)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))))))
-                                             ((equal? (length creaturesPlayer1) 3)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))))))
-                                             ((equal? (length creaturesPlayer1) 4)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))))))
-                                             ((equal? (length creaturesPlayer1) 5)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))))))))
-                                          ((not (equal? activeSpell "none"))
-                                           ((equal? (length creaturesPlayer1) 1)
-                                              (cond
-                                                ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                 (set! selectedCreatureObjects (append (list (cons (first player1ObjectIndex) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                 (set! selectedCreatures (append (list (cons (first creaturesPlayer1) (rest (first selectedCreatures)))) (rest selectedCreatures)))
-                                                 ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (first selectedCreatures)) get-card)))))
-                                             ((equal? (length creaturesPlayer1) 2)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (first selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 3)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (first selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 4)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (first selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 5)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
-                                                   (set! selectedCreatures (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatures)))) (rest selectedCreatures)))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (first selectedCreatures)) get-card)))))))))
-                                          ((and (> y (first config:player2Y-BoardRange)) (< y (second config:player2Y-BoardRange)))
-                                           (cond
-                                             ((equal? (spellStruct-name activeSpell) "none")
-                                              (cond
-                                                ((equal? (length creaturesPlayer2) 1)
-                                                 (cond
-                                                   ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                    (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (first player2ObjectIndex)))) (rest selectedCreatureObjects)))
-                                                    (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (first creaturesPlayer2)))) (rest selectedCreatures)))
-                                                    (cond
-                                                      ((not (equal? (first (first selectedCreatures)) config:noCreature))
-                                                       (attack (send (first (first selectedCreatures)) get-card) (send (second (first selectedCreatures)) get-card)))))))
-                                                ((equal? (length creaturesPlayer2) 2)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                      (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                      (cond
-                                                        ((not (equal? (first (first selectedCreatures)) config:noCreature))
-                                                         (attack (send (first (first selectedCreatures)) get-card) (send (second (first selectedCreatures)) get-card))))))))
-                                                ((equal? (length creaturesPlayer2) 3)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                      (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                      (cond
-                                                        ((not (equal? (first (first selectedCreatures)) config:noCreature))
-                                                         (attack (send (first (first selectedCreatures)) get-card) (send (second (first selectedCreatures)) get-card))))))))
-                                                ((equal? (length creaturesPlayer2) 4)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                      (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                      (cond
-                                                        ((not (equal? (first (first selectedCreatures)) config:noCreature))
-                                                         (attack (send (first (first selectedCreatures)) get-card) (send (second (first selectedCreatures)) get-card))))))))
-                                                ((equal? (length creaturesPlayer2) 5)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                      (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                      (cond
-                                                        ((not (equal? (first (first selectedCreatures)) config:noCreature))
-                                                         (attack (send (first (first selectedCreatures)) get-card) (send (second (first selectedCreatures)) get-card))))))))))
-                                              ((not (equal? (spellStruct-name activeSpell) "none"))
-                                               (cond
-                                                 ((equal? (length creaturesPlayer2) 1)
-                                                  (cond
-                                                    ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                     (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (first player2ObjectIndex)))) (rest selectedCreatureObjects)))
-                                                     (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (first creaturesPlayer2)))) (rest selectedCreatures)))
-                                                     ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (first selectedCreatures)) get-card)))))
-                                                 ((equal? (length creaturesPlayer2) 2)
-                                                  (for ([i (length creaturesPlayer2)])
-                                                    (cond
-                                                      ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                       (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                       (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                       ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (first selectedCreatures)) get-card))))))
-                                                 ((equal? (length creaturesPlayer2) 3)
-                                                  (for ([i (length creaturesPlayer2)])
-                                                    (cond
-                                                      ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                       (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                       (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                       ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (first selectedCreatures)) get-card))))))
-                                                 ((equal? (length creaturesPlayer2) 4)
-                                                  (for ([i (length creaturesPlayer2)])
-                                                    (cond
-                                                      ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                       (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                       (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                       ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (first selectedCreatures)) get-card))))))
-                                                 ((equal? (length creaturesPlayer2) 5)
-                                                  (for ([i (length creaturesPlayer2)])
-                                                    (cond
-                                                      ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                       (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref player2ObjectIndex i)))) (rest selectedCreatureObjects)))
-                                                       (set! selectedCreatures (append (list (cons (first (first selectedCreatures)) (list (list-ref creaturesPlayer2 i)))) (rest selectedCreatures)))
-                                                       ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (first selectedCreatures)) get-card))))))))))))
-                                    ((equal? currentTurn 2) 
-                                     (cond
-                                       ((and (> y (first config:player1Y-BoardRange)) (< y (second config:player1Y-BoardRange)))
-                                        (cond
-                                          ((equal? (spellStruct-name activeSpell) "none")
-                                           (cond
-                                             ((equal? (length creaturesPlayer1) 1)
-                                              (cond
-                                                ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                 (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first player1ObjectIndex) (list (second (first (rest selectedCreatureObjects))))))))
-                                                 (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first creaturesPlayer1) (list (second (first (rest selectedCreatures))))))))
-                                                 (cond
-                                                   ((not (equal? (second (second selectedCreatures)) config:noCreature))
-                                                    (attack (send (second (second selectedCreatures)) get-card) (send (first (second selectedCreatures)) get-card)))))))
-                                             ((equal? (length creaturesPlayer1) 2)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   (cond
-                                                     ((not (equal? (second (second selectedCreatures)) config:noCreature))
-                                                      (attack (send (second (second selectedCreatures)) get-card) (send (first (second selectedCreatures)) get-card))))))))
-                                             ((equal? (length creaturesPlayer1) 3)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   (cond
-                                                     ((not (equal? (second (second selectedCreatures)) config:noCreature))
-                                                      (attack (send (second (second selectedCreatures)) get-card) (send (first (second selectedCreatures)) get-card))))))))
-                                             ((equal? (length creaturesPlayer1) 4)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   (cond
-                                                     ((not (equal? (second (second selectedCreatures)) config:noCreature))
-                                                      (attack (send (second (second selectedCreatures)) get-card) (send (first (second selectedCreatures)) get-card))))))))
-                                             ((equal? (length creaturesPlayer1) 5)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   (cond
-                                                     ((not (equal? (second (second selectedCreatures)) config:noCreature))
-                                                      (attack (send (second (second selectedCreatures)) get-card) (send (first (second selectedCreatures)) get-card))))))))))
-                                          ((not (equal? (spellStruct-name activeSpell) "none"))
-                                           (cond
-                                             ((equal? (length creaturesPlayer1) 1)
-                                              (cond
-                                                ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                 (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first player1ObjectIndex) (list (second (first (rest selectedCreatureObjects))))))))
-                                                 (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first creaturesPlayer1) (list (second (first (rest selectedCreatures))))))))
-                                                 ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (second selectedCreatures)) get-card)))))
-                                             ((equal? (length creaturesPlayer1) 2)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (second selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 3)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (second selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 4)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (second selectedCreatures)) get-card))))))
-                                             ((equal? (length creaturesPlayer1) 5)
-                                              (for ([i (length creaturesPlayer1)])
-                                                (cond
-                                                  ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                   (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest selectedCreatureObjects))))))))
-                                                   (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatures))))))))
-                                                   ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (first (second selectedCreatures)) get-card))))))))
-                                          ((and (> y (first config:player2Y-BoardRange)) (< y (second config:player2Y-BoardRange)))
-                                           (cond
-                                             ((equal? (spellStruct-name activeSpell) "none")
-                                              (cond
-                                                ((equal? (length creaturesPlayer2) 1)
-                                                 (cond
-                                                   ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                    (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (first player2ObjectIndex))))))
-                                                    (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (first creaturesPlayer2)))))))))
-                                                ((equal? (length creaturesPlayer2) 2)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))))))
-                                                ((equal? (length creaturesPlayer2) 3)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))))))
-                                                ((equal? (length creaturesPlayer2) 4)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))))))
-                                                ((equal? (length creaturesPlayer2) 5)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))))))))
-                                             ((not (equal? (spellStruct-name activeSpell) "none"))
-                                              (cond
-                                                ((equal? (length creaturesPlayer2) 1)
-                                                 (cond
-                                                   ((and (> x (first (first config:oneCreatureBoardRange))) (< x (second (first config:oneCreatureBoardRange))))
-                                                    (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (first player2ObjectIndex))))))
-                                                    (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (first creaturesPlayer2))))))
-                                                    ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (second selectedCreatures)) get-card)))))
-                                                ((equal? (length creaturesPlayer2) 2)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:twoCreatureBoardRange i))) (< x (second (list-ref config:twoCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))
-                                                      ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (second selectedCreatures)) get-card))))))
-                                                ((equal? (length creaturesPlayer2) 3)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:threeCreatureBoardRange i))) (< x (second (list-ref config:threeCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))
-                                                      ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (second selectedCreatures)) get-card))))))
-                                                ((equal? (length creaturesPlayer2) 4)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fourCreatureBoardRange i))) (< x (second (list-ref config:fourCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))
-                                                      ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (second selectedCreatures)) get-card))))))
-                                                ((equal? (length creaturesPlayer2) 5)
-                                                 (for ([i (length creaturesPlayer2)])
-                                                   (cond
-                                                     ((and (> x (first (list-ref config:fiveCreatureBoardRange i))) (< x (second (list-ref config:fiveCreatureBoardRange i))))
-                                                      (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref player2ObjectIndex i))))))
-                                                      (set! selectedCreatures (append (list (first selectedCreatures)) (list (cons (first (first (rest selectedCreatures))) (list (list-ref creaturesPlayer2 i))))))
-                                                      ((send (getCard (spellStruct-name activeSpell)) get-effect) (send (second (second selectedCreatures)) get-card)))))))))))))))))))
-                                  
-                                  
-                                        
+    (define/public selectBoardCreature
+      (λ (event)
+        (let ([x (send event get-x)])
+          (let ([y (send event get-y)])
+            (cond
+              ((equal? currentTurn 1)
+               (for ([i (length creaturesPlayer1)])
+                 (for ([i2 (length creaturesPlayer2)])
+                   (when (and (<= (convertCoords x) (+ (gameObject-x (list-ref sortedObjects i)) 70)) (>= (convertCoords x) (- (gameObject-x (list-ref sortedObjects i)) 70)))
+                     (cond
+                       ((and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange)))
+                        (set! indexOfSelectedGameObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first indexOfSelectedGameObjects)))) (rest indexOfSelectedGameObjects)))
+                        (set! selectedCreatureObjects (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects))))
+                       ((and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange)))
+                        (set! indexOfSelectedGameObjects (append (list (cons (first (first indexOfSelectedGameObjects)) (list (list-ref player2ObjectIndex i2)))) (rest indexOfSelectedGameObjects)))
+                        (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref creaturesPlayer2 i2)))) (rest selectedCreatureObjects)))
+                        (cond
+                          ((not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
+                           (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card))))))))))
+              ((equal? currentTurn 2)
+               (for ([i (length creaturesPlayer1)])
+                 (for ([i2 (length creaturesPlayer2)])
+                   (when (and (<= (convertCoords x) (+ (gameObject-x (list-ref sortedObjects i)) 70)) (>= (convertCoords x) (- (gameObject-x (list-ref sortedObjects i)) 70)))
+                     (cond
+                       ((and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange)))
+                        (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (first (first (rest indexOfSelectedGameObjects))) (list (list-ref player2ObjectIndex i2))))))
+                        (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref creaturesPlayer2 i2)))))))
+                       ((and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange)))
+                        (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest indexOfSelectedGameObjects))))))))
+                        (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatureObjects))))))))
+                        (cond
+                          ((not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
+                           (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card)))))))))))))))
+      
+                                                      
     (super-new)))
 
 (define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmap-scale 1] [min-height 600]))
@@ -468,7 +189,15 @@
                                    (for ([i (length creaturesPlayer2)])
                                      (when (equal? (send (send (list-ref creaturesPlayer2 i) get-card) get-sleep) #t)
                                        (send (send (list-ref creaturesPlayer2 i) get-card) set-sleep #f)))))
-                                (endTurn)))])
+                                (for ([i (length sortedObjects)])
+                                         (cond
+                                           ((equal? (gameObject-y (list-ref sortedObjects i)) config:currentPlayerY)
+                                            (set-gameObject-y! (list-ref sortedObjects i) config:enemyPlayerY))
+                                           ((equal? (gameObject-y (list-ref sortedObjects i)) config:enemyPlayerY)
+                                            (set-gameObject-y! (list-ref sortedObjects i) config:currentPlayerY))))
+                                (endTurn manaDisplay) (refreshBoard)))])
+
+(define manaDisplay (new message% [parent frame] [label (string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana)))]))
 
 (define menu-bar (new menu-bar%
                       (parent frame)))
@@ -590,20 +319,31 @@
                                  ((= (length P2hand) i) image)
                                  (#t (generateHandImage (htdp:beside image (send (list-ref P2hand i) get-image)) (+ i 1)))
                                  )))))
-                            
 (define sortPlayer1ObjectIndex (λ ()
                                  (set! player1ObjectIndex '())
-                                 (for ([i (length sortedObjects)])
-                                   (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player1Y)
-                                     (set! player1ObjectIndex (append player1ObjectIndex (list i)))))
-                                 (set! player1ObjectIndex (removed2 player1ObjectIndex))))
+                                 (cond
+                                   ((equal? currentTurn 1)
+                                    (for ([i (length sortedObjects)])
+                                      (when (equal? (gameObject-y (list-ref sortedObjects i)) config:currentPlayerY)
+                                        (set! player1ObjectIndex (append player1ObjectIndex (list i))))))
+                                   ((equal? currentTurn 2)
+                                    (for ([i (length sortedObjects)])
+                                      (when (equal? (gameObject-y (list-ref sortedObjects i)) config:enemyPlayerY)
+                                        (set! player1ObjectIndex (append player1ObjectIndex (list i)))))))
+                                    (set! player1ObjectIndex (removed2 player1ObjectIndex))))
                                     
 (define sortPlayer2ObjectIndex (λ ()
                                  (set! player2ObjectIndex '())
-                                 (for ([i (length sortedObjects)])
-                                       (when (equal? (gameObject-y (list-ref sortedObjects i)) config:player2Y)
-                                         (set! player2ObjectIndex (append player2ObjectIndex (list i)))))
-                                     (set! player2ObjectIndex (removed2 player2ObjectIndex))))
+                                 (cond
+                                   ((equal? currentTurn 1)
+                                    (for ([i (length sortedObjects)])
+                                      (when (equal? (gameObject-y (list-ref sortedObjects i)) config:enemyPlayerY)
+                                        (set! player2ObjectIndex (append player2ObjectIndex (list i))))))
+                                   ((equal? currentTurn 2)
+                                    (for ([i (length sortedObjects)])
+                                      (when (equal? (gameObject-y (list-ref sortedObjects i)) config:currentPlayerY)
+                                        (set! player2ObjectIndex (append player2ObjectIndex (list i)))))))
+                                    (set! player2ObjectIndex (removed2 player2ObjectIndex))))
 (define refreshBoard (λ ()
                        (sortPlayer1ObjectIndex)
                        (cond
@@ -678,6 +418,8 @@
                            (cond
                              ((is-a? (list-ref P1hand pos) spell%)
                               (set-spellStruct-name! activeSpell (send (list-ref P1hand pos) get-name))
+                              (set-mana-currentMana! P1Mana (- (mana-currentMana P1Mana) cardMana))
+                              (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana))))
                               (removeCardFromHand pos)
                               (send hand-canvas on-paint)
                               (send hand-canvas show #t))
@@ -687,9 +429,10 @@
                                 (set! creaturesPlayer1 (append creaturesPlayer1 (list x)))
                                 (send x set-index (index-of creaturesPlayer1 x))
                                 (send (send x get-card) set-sleep #t)
-                                (addObject (send (send x get-card) get-image) 0 config:player1Y 0.5 1)
+                                (addObject (send (send x get-card) get-image) 0 config:currentPlayerY 0.5 1)
                                 (removeCardFromHand pos)
                                 (set-mana-currentMana! P1Mana (- (mana-currentMana P1Mana) cardMana))
+                                (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana))))
                                 (send hand-canvas on-paint)
                                 (send hand-canvas show #t)
                                 (refreshBoard)))))
@@ -699,15 +442,21 @@
                         (cond
                           ((>= (mana-currentMana P2Mana) cardMana)
                            (cond
-                             ((is-a? (list-ref P2hand pos) spell%))
+                             ((is-a? (list-ref P2hand pos) spell%)
+                              (set-spellStruct-name! activeSpell (send (list-ref P2hand pos) get-name))
+                              (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))
+                              (removeCardFromHand pos)
+                              (send hand-canvas on-paint)
+                              (send hand-canvas show #t))
                              ((is-a? (list-ref P2hand pos) creature%)
                               (let ([x (packageCardObject (list-ref P2hand pos) pos)])
                                 (set! creatureObjects (append creatureObjects (list x)))
                                 (set! creaturesPlayer2 (append creaturesPlayer2 (list x)))
                                 (send x set-index (index-of creaturesPlayer2 x))
-                                (addObject (send (send x get-card) get-image) 0 config:player2Y 0.5 1)
+                                (addObject (send (send x get-card) get-image) 0 config:currentPlayerY 0.5 1)
                                 (removeCardFromHand pos)
                                 (set-mana-currentMana! P2Mana (- (mana-currentMana P2Mana) cardMana))
+                                (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))
                                 (send hand-canvas on-paint)
                                 (send hand-canvas show #t)
                                 (refreshBoard)))))
@@ -723,32 +472,32 @@
                          ((is-a? defender creature%)
                           (cond
                             ((>= (send attacker get-attack) (send defender get-life))
-                             (removeObject (second (first selectedCreatureObjects)))
-                             (set! creaturesPlayer2 (remove (list-ref creatureObjects (second (first selectedCreatureObjects))) creaturesPlayer2))
-                             (removeCreatureObject (second (first selectedCreatureObjects)))
+                             (removeObject (second (first indexOfSelectedGameObjects)))
+                             (set! creaturesPlayer2 (remove (list-ref creatureObjects (second (first indexOfSelectedGameObjects))) creaturesPlayer2))
+                             (removeCreatureObject (second (first indexOfSelectedGameObjects)))
                              (refreshBoard)
                              (send attacker set-sleep #t)
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
+                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
+                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
                             ((< (send attacker get-attack) (send defender get-life))
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
+                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
+                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
                          (#t #f)))
                       ((equal? currentTurn 2)
                        (cond
                          ((is-a? defender creature%)
                           (cond
                             ((>= (send attacker get-attack) (send defender get-life))
-                             (removeObject (first (second selectedCreatureObjects)))
-                             (set! creaturesPlayer1 (remove (list-ref creatureObjects (first (second selectedCreatureObjects))) creaturesPlayer1))
-                             (removeCreatureObject (first (second selectedCreatureObjects)))
+                             (removeObject (first (second indexOfSelectedGameObjects)))
+                             (set! creaturesPlayer1 (remove (list-ref creatureObjects (first (second indexOfSelectedGameObjects))) creaturesPlayer1))
+                             (removeCreatureObject (first (second indexOfSelectedGameObjects)))
                              (refreshBoard)
                              (send attacker set-sleep #t)
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
+                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
+                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
                             ((< (send attacker get-attack) (send defender get-life))
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatures (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
+                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
+                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
                          (#t #f)))))
                    ((equal? (send attacker get-sleep) #t) #f))))
 
