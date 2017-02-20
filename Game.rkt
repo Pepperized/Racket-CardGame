@@ -26,6 +26,18 @@
               )
   )
 
+(define P1Health 10)
+(define P2Health 10)
+
+(define playerDamage (λ (attack turn)
+          (cond
+            ((equal? turn 1)
+             (set! P2Health (- P2Health attack)))
+            ((equal? turn 2)
+             (set! P1Health (- P1Health attack))))
+           (displayln P1Health)
+           (displayln P2Health)))
+
 (define P1hand '())
 (define P2hand '())
 
@@ -131,6 +143,7 @@
          currentTurn
          cancelSpell activeSpell set-spellStruct-name! spellStruct-name set-spellStruct-effect! spellStruct-effect
          creatureObject%
+         playerDamage P1Health P2Health
          endTurn
          init
          packageCardObject
