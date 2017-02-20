@@ -9,8 +9,10 @@
 (define deck (list
               (getCard "Lightning")
               (getCard "Lightning")
-              (getCard "Lightning")
-              (getCard "Lightning")
+              (getCard "Paladin")
+              (getCard "Paladin")
+              (getCard "Paladin")
+              (getCard "Paladin")
               (getCard "Archer")
               (getCard "Archer")
               (getCard "Archer")
@@ -52,7 +54,7 @@
     (init-field [card (new creature%)])
     (init-field [index 0])
     (init-field [player 1])
-
+    (init-field [lifeDisplay "none"])
     (define/public (get-card)
       card)
     (define/public (get-index)
@@ -61,7 +63,10 @@
       (set! index x))
     (define/public (get-player)
       player)
-    
+    (define/public (get-lifeDisplay)
+      lifeDisplay)
+    (define/public (set-lifeDisplay x)
+      (set! lifeDisplay x))
     (super-new)
     )
   )
@@ -97,24 +102,26 @@
                          (set! P2hand (append P2hand (list (getCard (spellStruct-name activeSpell)))))
                          (set-spellStruct-name! activeSpell "none")
                          (set-spellStruct-effect! activeSpell "none")))))
-(define endTurn (λ (manaDisplay)
+(define endTurn (λ (manaDisplay playerDisplay)
                   (cond
                     ((equal? currentTurn 1)
                      (begin (set! currentTurn 2)
                             (cond
-                              ((> config:maxMana (mana-manaCap P2Mana)) (begin (set-mana-manaCap! P2Mana (+ 1 (mana-manaCap P2Mana)))) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) (P2drawCard))
-                              ((equal? config:maxMana (mana-manaCap P2Mana)) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)) 
-                                                                             (cond
-                                                                               ((not (>= (length P1hand) 5)) (P2drawCard)))))
-                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))))
+                              ((> config:maxMana (mana-manaCap P2Mana)) (begin (set-mana-manaCap! P2Mana (+ 1 (mana-manaCap P2Mana)))) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana)))
+                              ((equal? config:maxMana (mana-manaCap P2Mana)) (set-mana-currentMana! P2Mana (mana-manaCap P2Mana))))
+                            (cond
+                              ((not (>= (length P2hand) 5)) (P2drawCard)))
+                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))
+                            (send playerDisplay set-label (string-append "Player: " (number->string currentTurn) "'s turn."))))
                     ((equal? currentTurn 2)
                      (begin (set! currentTurn 1)
                             (cond
-                              ((> config:maxMana (mana-manaCap P1Mana)) (begin (set-mana-manaCap! P1Mana (+ 1 (mana-manaCap P1Mana))) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) (P1drawCard)))
-                              ((equal? config:maxMana (mana-manaCap P1Mana)) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana)) 
-                                                                             (cond
-                                                                               ((not (>= (length P1hand) 5)) (P1drawCard)))))
-                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana)))))))))
+                              ((> config:maxMana (mana-manaCap P1Mana)) (begin (set-mana-manaCap! P1Mana (+ 1 (mana-manaCap P1Mana))) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana))))
+                              ((equal? config:maxMana (mana-manaCap P1Mana)) (set-mana-currentMana! P1Mana (mana-manaCap P1Mana))))
+                            (cond
+                              ((not (>= (length P1hand) 5)) (P1drawCard)))
+                            (send manaDisplay set-label (string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana))))
+                            (send playerDisplay set-label (string-append "Player: " (number->string currentTurn) "'s turn.")))))))
 
 (provide deck
          P1hand P2hand
@@ -123,6 +130,7 @@
          mana-manaCap set-mana-manaCap!
          currentTurn
          cancelSpell activeSpell set-spellStruct-name! spellStruct-name set-spellStruct-effect! spellStruct-effect
+         creatureObject%
          endTurn
          init
          packageCardObject

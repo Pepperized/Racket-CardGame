@@ -19,9 +19,6 @@
 (define frame (new frame%
                    [label "Window"] [width 1400] [height 800]
                    [style '(no-resize-border)]))
-(define convertCoords (λ (x)
-                        (- x 700)))
-
 ;;(define image->bitmap (λ (x) (htdp:color-list->bitmap (htdp:image->color-list x) (htdp:image-width x) (htdp:image-height x))))
 
 ;; Let's make a larger bitmap.
@@ -36,16 +33,17 @@
                        (send dc draw-bitmap logo 0 0)
                          result))))
 
+(define healthDisplays '())
 (define objects '())
 (define sortedObjects '())
 (define player1ObjectIndex '())
 (define player2ObjectIndex '())
 (define creaturesPlayer1 '())
 (define creaturesPlayer2 '())
-(define creatureObjects '())                                                                                                                 ;creature(Objects) selected by P1               ;creatureObjects selected by P2
+(define creatureObjects '())
 
-(define indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))) ; format: '( '(P1CreatureObjectIndex P2CreatureObjectIndex) '(P1CreatureObjectIndex P2CreatureObjectIndex) )
-(define selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))       ; format: '( '(P1selectedCreature P2selectedCreature) '(P1selectedCreature P2SelectedCreature) )
+(define indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
+(define selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
 
 (define sortPlayerCreatures (λ ([x creatureObjects] [y creaturesPlayer1] [z creaturesPlayer2])
                               (cond
@@ -69,6 +67,22 @@
                        (set! creatureObjects (remove (list-ref creatureObjects index) creatureObjects)) 
                        (send canvas on-paint)))
 
+(define removeCreatureLifeDisplayResult '())
+(define removeCreatureLifeDisplay (λ (creatureObj)
+                                    (cond
+                                      ((not (equal? (send creatureObj get-lifeDisplay) "none"))
+                                       (for ([i (length sortedObjects)])
+                                         (when (and
+                                                (equal? (gameObject-image (list-ref sortedObjects i)) (gameObject-image (send creatureObj get-lifeDisplay)))
+                                                (equal? (gameObject-x (list-ref sortedObjects i)) (gameObject-x (send creatureObj get-lifeDisplay)))
+                                                (equal? (gameObject-y (list-ref sortedObjects i)) (gameObject-y (send creatureObj get-lifeDisplay)))
+                                                (equal? (gameObject-scale (list-ref sortedObjects i)) (gameObject-scale (send creatureObj get-lifeDisplay)))
+                                                (equal? (gameObject-layer (list-ref sortedObjects i)) (gameObject-layer (send creatureObj get-lifeDisplay))))
+                                           (set! removeCreatureLifeDisplayResult (append removeCreatureLifeDisplayResult (list (- i (length removeCreatureLifeDisplayResult)))))))
+                                       (for ([i (length removeCreatureLifeDisplayResult)])
+                                         (removeObject (list-ref removeCreatureLifeDisplayResult i)))
+                                       (set! removeCreatureLifeDisplayResult '()))
+                                      (#t #f))))
 ;(define removeObject (λ (index)
 ;                       (set! objects (remove (list-ref objects index) objects))
 ;                       (send canvas on-paint)))
@@ -78,7 +92,7 @@
                                      (#t (let ([x '()])
                                            (for ([i (length objects)])
                                              (when (= count (gameObject-layer (list-ref objects i))) (set! x (append x (list (list-ref objects i))))))
-                                           (sortObjects (+ count 1) (append res x)))))))
+                                           (sortObjects (+ count 1) (append res x)))))))                
 
 (define generateGameScene (λ () 
                             (set! sortedObjects (sortObjects))
@@ -98,7 +112,38 @@
      (send dc clear)
      (render-image image dc 0 0)
      bm))
-           
+
+(struct temp (lst) #:mutable)
+(define tmp (temp '()))
+(struct coords (x y) #:mutable)
+(define currentCoords (coords 0 0))
+(define convertCoordsPrelim (λ (y turn)
+                              (cond
+                                ((and (equal? turn 1) (and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange))))
+                                 (set-temp-lst! tmp creaturesPlayer1)
+                                 (set-coords-y! currentCoords (- y 600)))
+                                ((and (equal? turn 1) (and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange))))
+                                 (set-temp-lst! tmp creaturesPlayer2))
+                                ((and (equal? turn 2) (and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange))))
+                                 (set-temp-lst! tmp creaturesPlayer2)
+                                 (set-coords-y! currentCoords (- y 600)))
+                                ((and (equal? turn 2) (and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange))))
+                                 (set-temp-lst! tmp creaturesPlayer1)))))
+
+(define convertCoords (λ (x creaturesLst1 creaturesLst2 turn temp)
+                        (cond
+                          ((equal? (length (temp-lst tmp)) 1) (set-coords-x! currentCoords (- x 700)))
+                          ((equal? (length (temp-lst tmp)) 2)
+                           (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (set-coords-x! currentCoords (- x 900))))
+                          ((equal? (length (temp-lst tmp)) 3)
+                           (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (set-coords-x! currentCoords (- x 1100)))))
+                          ((equal? (length (temp-lst tmp)) 4)
+                           (if (and (>= x 315) (<= x 485)) (set-coords-x! currentCoords (- x 100)) (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (if (and (>= x 715) (<= x 885)) (set-coords-x! currentCoords (- x 900)) (set-coords-x! currentCoords (- x 1300))))))
+                          ((equal? (length (temp-lst tmp)) 5)
+                           (if (and (>= x 215) (<= x 385)) (set-coords-x! currentCoords (+ x 100)) (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (if (and (>= x 815) (<= x 985)) (set-coords-x! currentCoords (- x 1100)) (set-coords-x! currentCoords (- x 1500))))))))))
+(define convertCoordsReset (λ ()
+                             (set-temp-lst! tmp '())))
+
 (define bitmap-canvas%
   (class canvas%
     (init-field [bitmap #f])
@@ -118,41 +163,55 @@
                                          (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                          (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                          (cond
-                                           ((not (equal? (spellStruct-name activeSpell) "none")) (cancelSpell) (send hand-canvas on-paint) ))))))
+                                           ((not (equal? (spellStruct-name activeSpell) "none"))
+                                            (if (equal? currentTurn 1) (set-mana-currentMana! P1Mana (+ (mana-currentMana P1Mana) (send (getCard (spellStruct-name activeSpell)) get-mana))) (set-mana-currentMana! P2Mana (+ (mana-currentMana P2Mana) (send (getCard (spellStruct-name activeSpell)) get-mana))))
+                                            (cancelSpell)(send hand-canvas on-paint)))))))
                                       
     (define/public selectBoardCreature
       (λ (event)
-        (let ([x (send event get-x)])
-          (let ([y (send event get-y)])
+        (set-coords-y! currentCoords (send event get-y))
+        (convertCoordsPrelim (coords-y currentCoords) currentTurn)
+        (convertCoords (send event get-x) creaturesPlayer1 creaturesPlayer2 currentTurn (temp-lst tmp))
+        (let ([y (coords-y currentCoords)])
+          (let ([x (coords-x currentCoords)])
             (cond
               ((equal? currentTurn 1)
-               (for ([i (length creaturesPlayer1)])
-                 (for ([i2 (length creaturesPlayer2)])
-                   (when (and (<= (convertCoords x) (+ (gameObject-x (list-ref sortedObjects i)) 70)) (>= (convertCoords x) (- (gameObject-x (list-ref sortedObjects i)) 70)))
-                     (cond
-                       ((and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange)))
-                        (set! indexOfSelectedGameObjects (append (list (cons (list-ref player1ObjectIndex i) (rest (first indexOfSelectedGameObjects)))) (rest indexOfSelectedGameObjects)))
-                        (set! selectedCreatureObjects (append (list (cons (list-ref creaturesPlayer1 i) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects))))
-                       ((and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange)))
-                        (set! indexOfSelectedGameObjects (append (list (cons (first (first indexOfSelectedGameObjects)) (list (list-ref player2ObjectIndex i2)))) (rest indexOfSelectedGameObjects)))
-                        (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref creaturesPlayer2 i2)))) (rest selectedCreatureObjects)))
-                        (cond
-                          ((not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
-                           (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card))))))))))
+               (for ([i (length sortedObjects)])
+                 (cond
+                   ((< i (length sortedObjects))
+                    (when (and (<= x (+ (gameObject-x (list-ref sortedObjects i)) 85)) (>= x (- (gameObject-x (list-ref sortedObjects i)) 85)))
+                      (displayln i)
+                      (displayln y)
+                      (displayln (gameObject-y (list-ref sortedObjects i)))
+                      (cond
+                        ((and (<= (gameObject-y (list-ref sortedObjects i)) 20) (>= (gameObject-y (list-ref sortedObjects i)) -220) (<= y 20) (>= y -220))
+                            (set! indexOfSelectedGameObjects (append (list (cons i (rest (first indexOfSelectedGameObjects)))) (rest indexOfSelectedGameObjects)))
+                            (set! selectedCreatureObjects (append (list (cons (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects))))
+                        ((and (<= (gameObject-y (list-ref sortedObjects i)) 320) (>= (gameObject-y (list-ref sortedObjects i)) 80) (<= y 320) (>= y 80))
+                            (set! indexOfSelectedGameObjects (append (list (cons (first (first indexOfSelectedGameObjects)) (list i))) (rest indexOfSelectedGameObjects)))
+                            (set! selectedCreatureObjects (append (list (cons (first (first selectedCreatureObjects)) (list (list-ref creaturesPlayer2 (index-of player2ObjectIndex i))))) (rest selectedCreatureObjects)))
+                         (cond
+                           ((not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
+                            (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card)))))))))))
               ((equal? currentTurn 2)
-               (for ([i (length creaturesPlayer1)])
-                 (for ([i2 (length creaturesPlayer2)])
-                   (when (and (<= (convertCoords x) (+ (gameObject-x (list-ref sortedObjects i)) 70)) (>= (convertCoords x) (- (gameObject-x (list-ref sortedObjects i)) 70)))
-                     (cond
-                       ((and (>= y (first config:currentPlayerY-BoardRange)) (<= y (second config:currentPlayerY-BoardRange)))
-                        (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (first (first (rest indexOfSelectedGameObjects))) (list (list-ref player2ObjectIndex i2))))))
-                        (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref creaturesPlayer2 i2)))))))
-                       ((and (>= y (first config:enemyPlayerY-BoardRange)) (<= y (second config:enemyPlayerY-BoardRange)))
-                        (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (list-ref player1ObjectIndex i) (list (second (first (rest indexOfSelectedGameObjects))))))))
-                        (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref creaturesPlayer1 i) (list (second (first (rest selectedCreatureObjects))))))))
-                        (cond
-                          ((not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
-                           (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card)))))))))))))))
+               (for ([i (length sortedObjects)])
+                 (cond
+                   ((< i (length sortedObjects))
+                    (when (and (<= x (+ (gameObject-x (list-ref sortedObjects i)) 85)) (>= x (- (gameObject-x (list-ref sortedObjects i)) 85)))
+                      (displayln i)
+                      (displayln y)
+                      (displayln (gameObject-y (list-ref sortedObjects i)))
+                      (cond
+                        ((and (<= (gameObject-y (list-ref sortedObjects i)) 20) (>= (gameObject-y (list-ref sortedObjects i)) -220) (<= y 20) (>= y -220))
+                            (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (first (first (rest indexOfSelectedGameObjects))) (list i)))))
+                            (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref creaturesPlayer2 (index-of player2ObjectIndex i))))))))
+                        ((and (<= (gameObject-y (list-ref sortedObjects i)) 320) (>= (gameObject-y (list-ref sortedObjects i)) 80) (<= y 320) (>= y 80))
+                            (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons i (list (second (first (rest indexOfSelectedGameObjects))))))))
+                            (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) (list (second (first (rest selectedCreatureObjects))))))))
+                         (cond
+                           ((not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
+                            (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card))))))))))))))
+        (convertCoordsReset)))
       
                                                       
     (super-new)))
@@ -195,9 +254,10 @@
                                             (set-gameObject-y! (list-ref sortedObjects i) config:enemyPlayerY))
                                            ((equal? (gameObject-y (list-ref sortedObjects i)) config:enemyPlayerY)
                                             (set-gameObject-y! (list-ref sortedObjects i) config:currentPlayerY))))
-                                (endTurn manaDisplay) (refreshBoard)))])
+                                (endTurn manaDisplay playerDisplay) (refreshBoard)))])
 
 (define manaDisplay (new message% [parent frame] [label (string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana)))]))
+(define playerDisplay (new message% [parent frame] [label (string-append "Player: " (number->string currentTurn) "'s turn.")]))
 
 (define menu-bar (new menu-bar%
                       (parent frame)))
@@ -374,7 +434,7 @@
                           (set-gameObject-x! (list-ref sortedObjects (second player1ObjectIndex)) 200)
                           (set-gameObject-x! (list-ref sortedObjects (third player1ObjectIndex)) 0)
                           (set-gameObject-x! (list-ref sortedObjects (fourth player1ObjectIndex)) -200)
-                          (set-gameObject-x! (list-ref sortedObjects (fifth player1ObjectIndex)) -400)
+                          (set-gameObject-x! (list-ref sortedObjects (fifth player1ObjectIndex)) -400) 
                           (send canvas on-paint)
                           (send canvas show #t)))
                        (sortPlayer2ObjectIndex)
@@ -408,7 +468,21 @@
                           (set-gameObject-x! (list-ref sortedObjects (fourth player2ObjectIndex)) -200)
                           (set-gameObject-x! (list-ref sortedObjects (fifth player2ObjectIndex)) -400)
                           (send canvas on-paint)
-                          (send canvas show #t)))))
+                          (send canvas show #t)))
+                       (for ([i (length sortedObjects)])
+                         (displayln creaturesPlayer1)
+                         (cond
+                           ((not (equal? (length creaturesPlayer1) 0))
+                            (if (not (equal? #f (index-of player1ObjectIndex i)))
+                                (cond
+                                  ((and (is-a? (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) creatureObject%) (not (equal? (send (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) get-lifeDisplay) "none")))
+                                   (displayCreatureLife (list-ref sortedObjects i) (send (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) get-card) (list-ref creaturesPlayer1 (index-of player1ObjectIndex i))))) #f)))
+                         (cond
+                           ((not (equal? (length creaturesPlayer2) 0))
+                            (if (not (equal? #f (index-of player2ObjectIndex i)))
+                                (cond
+                                  ((and (is-a? (list-ref creaturesPlayer2 (index-of player2ObjectIndex i)) creatureObject%) (not (equal? (send (list-ref creaturesPlayer2 (index-of player2ObjectIndex i)) get-lifeDisplay) "none")))
+                                   (displayCreatureLife (list-ref sortedObjects i) (send (list-ref creaturesPlayer2 (index-of player2ObjectIndex i)) get-card) (list-ref creaturesPlayer2 (index-of player2ObjectIndex i))))) #f))))))
 (define playCard (λ (pos)
                    (cond
                      ((equal? currentTurn 1)
@@ -444,6 +518,7 @@
                            (cond
                              ((is-a? (list-ref P2hand pos) spell%)
                               (set-spellStruct-name! activeSpell (send (list-ref P2hand pos) get-name))
+                              (set-mana-currentMana! P2Mana (- (mana-currentMana P2Mana) cardMana))
                               (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))
                               (removeCardFromHand pos)
                               (send hand-canvas on-paint)
@@ -466,41 +541,34 @@
 (define attack (λ (attacker defender)
                  (cond
                    ((equal? (send attacker get-sleep) #f)
-                    (cond
-                      ((equal? currentTurn 1)
-                       (cond
-                         ((is-a? defender creature%)
                           (cond
-                            ((>= (send attacker get-attack) (send defender get-life))
-                             (removeObject (second (first indexOfSelectedGameObjects)))
-                             (set! creaturesPlayer2 (remove (list-ref creatureObjects (second (first indexOfSelectedGameObjects))) creaturesPlayer2))
-                             (removeCreatureObject (second (first indexOfSelectedGameObjects)))
+                            ((equal? currentTurn 1)
+                             (if (>= (send attacker get-attack) (send defender get-life))
+                                 (begin (removeObject (second (first indexOfSelectedGameObjects)))
+                                        (set! creaturesPlayer2 (remove (list-ref creatureObjects (second (first indexOfSelectedGameObjects))) creaturesPlayer2))
+                                        (removeCreatureObject (second (first indexOfSelectedGameObjects)))
+                                        (removeCreatureLifeDisplay (second (first selectedCreatureObjects))))
+                                 (begin (send defender set-life (- (send defender get-life) (send attacker get-attack)))
+                                        (displayCreatureLife (list-ref sortedObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) defender (second (first selectedCreatureObjects)))
+                                        ))
                              (refreshBoard)
                              (send attacker set-sleep #t)
                              (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                              (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
-                            ((< (send attacker get-attack) (send defender get-life))
-                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
-                         (#t #f)))
                       ((equal? currentTurn 2)
-                       (cond
-                         ((is-a? defender creature%)
-                          (cond
-                            ((>= (send attacker get-attack) (send defender get-life))
                              (removeObject (first (second indexOfSelectedGameObjects)))
                              (set! creaturesPlayer1 (remove (list-ref creatureObjects (first (second indexOfSelectedGameObjects))) creaturesPlayer1))
                              (removeCreatureObject (first (second indexOfSelectedGameObjects)))
                              (refreshBoard)
                              (send attacker set-sleep #t)
                              (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
-                             (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))
-                            ((< (send attacker get-attack) (send defender get-life))
-                             (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                              (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
-                         (#t #f)))))
                    ((equal? (send attacker get-sleep) #t) #f))))
 
+(define displayCreatureLife (λ (gameObj creature creatureObj)
+                                 (removeCreatureLifeDisplay creatureObj)
+                                 (send creatureObj set-lifeDisplay (gameObject (htdp:text (number->string (send creature get-life)) 80 "red") (- (gameObject-x gameObj) 68) (- (gameObject-y gameObj) 100) 0.5 2))
+                                 (addObject (htdp:text (number->string (send creature get-life)) 80 "red") (gameObject-x (send creatureObj get-lifeDisplay)) (gameObject-y (send creatureObj get-lifeDisplay)) (gameObject-scale (send creatureObj get-lifeDisplay)) (gameObject-layer (send creatureObj get-lifeDisplay)))
+                                 (send canvas on-paint)(send canvas show #t)))
 (provide startGUI
-         addObject
-         )
+         addObject)
