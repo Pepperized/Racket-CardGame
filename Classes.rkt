@@ -44,6 +44,7 @@
 
     (define/public (get-attack) attack)
     (define/public (get-life) life)
+    (define/public (set-life x) (set! life x))
     (define/public (get-on-play-effect) on-play-effect)
     (define/public (get-sleep) sleep)
     (define/public (set-sleep x) (set! sleep x))
