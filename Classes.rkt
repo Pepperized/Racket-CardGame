@@ -24,10 +24,12 @@
 (define spell%
   (class card%
     (init-field [effect "none"])
+    (inherit-field name mana image)
 
     (define/public (get-effect)
       effect)
-    
+    (define/public (clone)
+      (new spell% [effect effect] [name name] [mana mana] [image image]))   
     (super-new)
     )
   )
@@ -38,12 +40,15 @@
     (init-field [life 0])
     (init-field [sleep #t])
     (init-field [on-play-effect "none"])
+    (inherit-field name mana image)
 
     (define/public (get-attack) attack)
     (define/public (get-life) life)
     (define/public (get-on-play-effect) on-play-effect)
     (define/public (get-sleep) sleep)
     (define/public (set-sleep x) (set! sleep x))
+    (define/public (clone)
+      (new creature% [attack attack] [life life] [on-play-effect on-play-effect] [sleep sleep] [name name] [mana mana] [image image]))
     
     (super-new)
     )

@@ -78,11 +78,13 @@
 (define packageCardObject (λ (card pos)
                             (cond
                               ((equal? currentTurn 1)
-                               (new creatureObject% [card (list-ref P1hand pos)] [index 0] [player 1]))
+                               (new creatureObject% [card (send (list-ref P1hand pos) clone)] [index 0] [player 1]))
                               ((equal? currentTurn 2)
-                               (new creatureObject% [card (list-ref P2hand pos)] [index 0] [player 2]))
+                               (new creatureObject% [card (send (list-ref P2hand pos) clone)] [index 0] [player 2]))
                               (#t (displayln "currentTurn error"))
                                )))
+                                      
+
 (define cancelSpell (λ ()
                       (cond
                         ((equal? currentTurn 1)
