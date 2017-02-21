@@ -1,7 +1,8 @@
 #lang racket/gui
 
 (require racket/draw
-         net/url)
+         net/url
+         "Classes.rkt")
 
 (require "Cards.rkt"
          (prefix-in config: "Config.rkt"))
@@ -60,28 +61,6 @@
                                  (set! P2hand (remove (list-ref P2hand index) P2hand)))
                                (#t (displayln "currentTurn error"))
                                )))
-
-(define creatureObject%
-  (class object%
-    (init-field [card (new creature%)])
-    (init-field [index 0])
-    (init-field [player 1])
-    (init-field [lifeDisplay "none"])
-    (define/public (get-card)
-      card)
-    (define/public (get-index)
-      index)
-    (define/public (set-index x)
-      (set! index x))
-    (define/public (get-player)
-      player)
-    (define/public (get-lifeDisplay)
-      lifeDisplay)
-    (define/public (set-lifeDisplay x)
-      (set! lifeDisplay x))
-    (super-new)
-    )
-  )
 
 (define init (λ ()
                (P1drawCard)
