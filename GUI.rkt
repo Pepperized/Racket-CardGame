@@ -96,9 +96,23 @@
 
 (define generateGameScene (λ () 
                             (set! sortedObjects (sortObjects))
+                            (sortPlayer1ObjectIndex)
+                            (sortPlayer2ObjectIndex)
                             (let ([bg (htdp:bitmap/file "Images/Other/bg.jpg")])
-                              (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 50 bg))
-                              )))
+                              (let ([scene (overlay (htdp:overlay/offset (htdp:bitmap/file "Images/Other/divider.png") 0 50 bg))])
+                            
+                            (for ([i (length creaturesPlayer1)])
+                              (when (send (send (list-ref creaturesPlayer1 i) get-card) get-sleep) (begin
+                                                                                                     (set! scene (htdp:overlay/offset (htdp:bitmap/file "Images/Other/sleep.png") (gameObject-x (gameObject-of-index 1 i)) (gameObject-y (gameObject-of-index 1 i)) scene))
+                                                                                                     )
+                              ))
+                            (for ([i (length creaturesPlayer2)])
+                              (when (send (send (list-ref creaturesPlayer2 i) get-card) get-sleep) (begin
+                                                                                                     (set! scene (htdp:overlay/offset (htdp:bitmap/file "Images/Other/sleep.png") (gameObject-x (gameObject-of-index 2 i)) (gameObject-y (gameObject-of-index 2 i)) scene))
+                                                                                                     )
+                             ))
+                            scene
+                            ))))
                             
 (define overlay (λ (i1 [i 0]) (cond
                                 ((= i (length sortedObjects)) i1)
@@ -619,5 +633,12 @@
                                  (send creatureObj set-lifeDisplay (gameObject (htdp:text (number->string (send creature get-life)) 80 "red") (- (gameObject-x gameObj) 68) (- (gameObject-y gameObj) 100) 0.5 2))
                                  (addObject (htdp:text (number->string (send creature get-life)) 80 "red") (gameObject-x (send creatureObj get-lifeDisplay)) (gameObject-y (send creatureObj get-lifeDisplay)) (gameObject-scale (send creatureObj get-lifeDisplay)) (gameObject-layer (send creatureObj get-lifeDisplay)))
                                  (send canvas on-paint)(send canvas show #t)))
+(define gameObject-of-index(λ (player index) (cond
+                                               ((= player 1) (list-ref sortedObjects (list-ref player1ObjectIndex index)))
+                                               ((= player 2) (list-ref sortedObjects (list-ref player2ObjectIndex index)))
+                                               )))
+
+
+                           
 (provide startGUI
          addObject)

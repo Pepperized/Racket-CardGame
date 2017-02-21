@@ -1,2 +1,3 @@
 working spell(s)
 on play effects for creatures
+creatureObject "card" needs to be "new" when set
