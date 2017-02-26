@@ -27,18 +27,6 @@
               )
   )
 
-(define P1Health 10)
-(define P2Health 10)
-
-(define playerDamage (λ (attack turn)
-          (cond
-            ((equal? turn 1)
-             (set! P2Health (- P2Health attack)))
-            ((equal? turn 2)
-             (set! P1Health (- P1Health attack))))
-           (displayln P1Health)
-           (displayln P2Health)))
-
 (define P1hand '())
 (define P2hand '())
 
@@ -47,8 +35,6 @@
 (define P2Mana (mana 0 0))
 
 (define currentTurn 1)
-(struct spellStruct (name effect) #:mutable)
-(define activeSpell (spellStruct "none" "none"))
 
 (define P1drawCard (λ () (set! P1hand (append P1hand (list (list-ref deck (random (length deck))))))))
 (define P2drawCard (λ () (set! P2hand (append P2hand (list (list-ref deck (random (length deck))))))))
@@ -62,7 +48,7 @@
                                (#t (displayln "currentTurn error"))
                                )))
 
-(define init (λ ()
+(define initialise (λ ()
                (P1drawCard)
                (P1drawCard)
                (P1drawCard)
@@ -73,7 +59,7 @@
                )
   )
 
-(init)
+(initialise)
 
 (define packageCardObject (λ (card pos)
                             (cond
@@ -87,14 +73,22 @@
 
 (define cancelSpell (λ ()
                       (cond
-                        ((equal? currentTurn 1)
-                         (set! P1hand (append P1hand (list (getCard (spellStruct-name activeSpell)))))
-                         (set-spellStruct-name! activeSpell "none")
-                         (set-spellStruct-effect! activeSpell "none"))
-                        ((equal? currentTurn 2)
-                         (set! P2hand (append P2hand (list (getCard (spellStruct-name activeSpell)))))
-                         (set-spellStruct-name! activeSpell "none")
-                         (set-spellStruct-effect! activeSpell "none")))))
+                        ((is-a? spell% (getCard (config:spellStruct-name config:activeSpell)))
+                         (cond
+                           ((equal? currentTurn 1)
+                            (set! P1hand (append P1hand (list (getCard (config:spellStruct-name config:activeSpell)))))
+                            (config:set-spellStruct-name! config:activeSpell "none")
+                            (config:set-spellStruct-effect! config:activeSpell "none")
+                            (config:set-spellStruct-num! config:activeSpell "none"))
+                           ((equal? currentTurn 2)
+                            (set! P2hand (append P2hand (list (getCard (config:spellStruct-name config:activeSpell)))))
+                            (config:set-spellStruct-name! config:activeSpell "none")
+                            (config:set-spellStruct-effect! config:activeSpell "none")
+                            (config:set-spellStruct-num! config:activeSpell "none"))))
+                        (else
+                         (config:set-spellStruct-name! config:activeSpell "none")
+                         (config:set-spellStruct-effect! config:activeSpell "none")
+                         (config:set-spellStruct-num! config:activeSpell "none")))))
 (define endTurn (λ (manaDisplay playerDisplay)
                   (cond
                     ((equal? currentTurn 1)
@@ -122,10 +116,9 @@
          mana-currentMana set-mana-currentMana!
          mana-manaCap set-mana-manaCap!
          currentTurn
-         cancelSpell activeSpell set-spellStruct-name! spellStruct-name set-spellStruct-effect! spellStruct-effect
+         cancelSpell
          creatureObject%
-         playerDamage P1Health P2Health
          endTurn
-         init
+         initialise
          packageCardObject
          removeCardFromHand)

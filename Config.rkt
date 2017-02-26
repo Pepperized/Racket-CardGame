@@ -1,5 +1,8 @@
 #lang racket
 
+(define P1Health 15)
+(define P2Health 15)
+
 (define currentPlayerY -100)
 (define enemyPlayerY 200)
 (define currentPlayerCreatureLifeY 400)
@@ -22,6 +25,9 @@
 (define currentPlayerY-BoardRange (list 375 620))
 (define enemyPlayerY-BoardRange (list 75 320))
 
+(struct spellStruct (name effect num) #:mutable)
+(define activeSpell (spellStruct "none" "none" "none"))
+
 (define player1SelectedFriendlyCreature (λ (lst)
                                   (first (first lst))))
 (define player1SelectedEnemyCreature (λ (lst)
@@ -30,5 +36,14 @@
                                   (second (second lst))))
 (define player2SelectedEnemyCreature (λ (lst)
                                    (first (second lst))))
+
+(define playerDamage (λ (attack turn)
+          (cond
+            ((equal? turn 1)
+             (set! P2Health (- P2Health attack)))
+            ((equal? turn 2)
+             (set! P1Health (- P1Health attack))))
+           (displayln P1Health)
+           (displayln P2Health)))
 
 (provide (all-defined-out))
