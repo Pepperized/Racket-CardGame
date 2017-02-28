@@ -79,7 +79,7 @@
 
 (define cancelSpell (λ ()
                       (cond
-                        ((is-a? (getCard (config:spellStruct-name config:activeSpell)) spell%)
+                        ((not (equal? (config:spellStruct-name config:activeSpell) "none"))
                          (cond
                            ((equal? currentTurn 1)
                             (set! P1hand (append P1hand (list (getCard (config:spellStruct-name config:activeSpell)))))

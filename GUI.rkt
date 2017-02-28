@@ -58,7 +58,7 @@
 (define removeCreatureLifeDisplayResult '())
 (define removeCreatureLifeDisplay (λ ()
                                     (for ([i (length sortedObjects)])
-                                      (when (equal? (gameObject-player (list-ref sortedObjects i)) 3)
+                                      (when (and (equal? (gameObject-layer (list-ref sortedObjects i)) 2)(equal? (gameObject-player (list-ref sortedObjects i)) 3))
                                         (set! removeCreatureLifeDisplayResult (append removeCreatureLifeDisplayResult (list (- i (length removeCreatureLifeDisplayResult)))))))
                                     (for ([i (length removeCreatureLifeDisplayResult)])
                                       (removeObject (list-ref removeCreatureLifeDisplayResult i)))
@@ -137,13 +137,13 @@
                         (cond
                           ((equal? (length (temp-lst tmp)) 1) (set-coords-x! currentCoords (- x 700)))
                           ((equal? (length (temp-lst tmp)) 2)
-                           (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (set-coords-x! currentCoords (- x 900))))
+                           (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (if (and (>= x 715) (<= x 885)) (set-coords-x! currentCoords (- x 900)) (set-coords-x! currentCoords 4000))))
                           ((equal? (length (temp-lst tmp)) 3)
-                           (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (set-coords-x! currentCoords (- x 1100)))))
+                           (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (if (and (>= x 815) (<= x 985)) (set-coords-x! currentCoords (- x 1100)) (set-coords-x! currentCoords 4000)))))
                           ((equal? (length (temp-lst tmp)) 4)
-                           (if (and (>= x 315) (<= x 485)) (set-coords-x! currentCoords (- x 100)) (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (if (and (>= x 715) (<= x 885)) (set-coords-x! currentCoords (- x 900)) (set-coords-x! currentCoords (- x 1300))))))
+                           (if (and (>= x 315) (<= x 485)) (set-coords-x! currentCoords (- x 100)) (if (and (>= x 515) (<= x 685)) (set-coords-x! currentCoords (- x 500)) (if (and (>= x 715) (<= x 885)) (set-coords-x! currentCoords (- x 900)) (if (and (>= x 915) (<= x 1085)) (set-coords-x! currentCoords (- x 1300)) (set-coords-x! currentCoords 4000))))))
                           ((equal? (length (temp-lst tmp)) 5)
-                           (if (and (>= x 215) (<= x 385)) (set-coords-x! currentCoords (+ x 100)) (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (if (and (>= x 815) (<= x 985)) (set-coords-x! currentCoords (- x 1100)) (set-coords-x! currentCoords (- x 1500))))))))))
+                           (if (and (>= x 215) (<= x 385)) (set-coords-x! currentCoords (+ x 100)) (if (and (>= x 415) (<= x 585)) (set-coords-x! currentCoords (- x 300)) (if (and (>= x 615) (<= x 785)) (set-coords-x! currentCoords (- x 700)) (if (and (>= x 815) (<= x 985)) (set-coords-x! currentCoords (- x 1100)) (if  (and (>= x 1015) (<= x 1185)) (set-coords-x! currentCoords (- x 1500)) (set-coords-x! currentCoords 4000))))))))))
 (define convertCoordsReset (λ ()
                              (set-temp-lst! tmp '())))
 
@@ -175,6 +175,13 @@
         (set-coords-y! currentCoords (send event get-y))
         (convertCoordsPrelim (coords-y currentCoords) currentTurn)
         (convertCoords (send event get-x) creaturesPlayer1 creaturesPlayer2 currentTurn (temp-lst tmp))
+        (set-temp-lst! tmp '())
+        (for ([i (length sortedObjects)])
+          (when (equal? (gameObject-layer (list-ref sortedObjects i)) 4)
+            (set-temp-lst! tmp (append (temp-lst tmp) (list (- i (length (temp-lst tmp))))))))
+        (for ([i (length (temp-lst tmp))])
+          (removeObject (list-ref (temp-lst tmp) i)))
+        (set-temp-lst! tmp '())
         (let ([y (coords-y currentCoords)])
           (let ([x (coords-x currentCoords)])
             (cond
@@ -188,7 +195,8 @@
                          (cond
                            ((not (equal? #f (index-of player1ObjectIndex i)))
                             (set! indexOfSelectedGameObjects (append (list (cons i (rest (first indexOfSelectedGameObjects)))) (rest indexOfSelectedGameObjects)))
-                            (set! selectedCreatureObjects (append (list (cons (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects))))))
+                            (set! selectedCreatureObjects (append (list (cons (list-ref creaturesPlayer1 (index-of player1ObjectIndex i)) (rest (first selectedCreatureObjects)))) (rest selectedCreatureObjects)))
+                            (addObject (htdp:text "*" 75 "red") (- (gameObject-x (list-ref sortedObjects (first (first indexOfSelectedGameObjects)))) 60) (+ (gameObject-y (list-ref sortedObjects (first (first indexOfSelectedGameObjects)))) 102) 0.5 4))))
                         ((and (<= (gameObject-y (list-ref sortedObjects i)) 320) (>= (gameObject-y (list-ref sortedObjects i)) 80) (<= y 320) (>= y 80))
                          (cond
                            ((not (equal? #f (index-of player2ObjectIndex i)))
@@ -216,7 +224,9 @@
                                    (set! selectedCreatureObjects (list (list 10 10) (list 10 10)))
                                    (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))))
                            ((not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
-                            (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card)))))))))))
+                            (set-temp-lst! tmp sortedObjects)
+                            (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card))
+                              )))))))))
               ((equal? currentTurn 2)
                (for ([i (length sortedObjects)])
                  (cond
@@ -227,7 +237,10 @@
                          (cond
                            ((not (equal? #f (index-of player2ObjectIndex i)))
                             (set! indexOfSelectedGameObjects (append (list (first indexOfSelectedGameObjects)) (list (cons (first (first (rest indexOfSelectedGameObjects))) (list i)))))
-                            (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref creaturesPlayer2 (index-of player2ObjectIndex i))))))))))
+                            (set! selectedCreatureObjects (append (list (first selectedCreatureObjects)) (list (cons (first (first (rest selectedCreatureObjects))) (list (list-ref creaturesPlayer2 (index-of player2ObjectIndex i)))))))
+                              (when (equal? (gameObject-layer (list-ref sortedObjects i)) 4)
+                                (removeObject i))
+                            (addObject (htdp:text "*" 75 "red") (- (gameObject-x (list-ref sortedObjects (second (second indexOfSelectedGameObjects)))) 60) (+ (gameObject-y (list-ref sortedObjects (second (second indexOfSelectedGameObjects)))) 102) 0.5 4))))
                         ((and (<= (gameObject-y (list-ref sortedObjects i)) 320) (>= (gameObject-y (list-ref sortedObjects i)) 80) (<= y 320) (>= y 80))
                          (cond
                            ((not (equal? #f (index-of player1ObjectIndex i)))
@@ -255,7 +268,27 @@
                                    (set! selectedCreatureObjects (list (list 10 10) (list 10 10)))
                                    (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))))
                            ((not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
-                            (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card))))))))))))))
+                            (set-temp-lst! tmp sortedObjects)
+                            (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card))
+                            ))))))))))
+            (set-temp-lst! tmp '())
+            (for ([i (length sortedObjects)])
+              (when (equal? (gameObject-layer (list-ref sortedObjects i)) 4)
+                (set-temp-lst! tmp (append (temp-lst tmp) (list i)))))
+            (cond
+              ((equal? currentTurn 1)
+               (cond
+                 ((not (equal? (first (first indexOfSelectedGameObjects)) 10))
+                  (cond
+                    ((equal? (length (temp-lst tmp)) 0)
+                     (addObject (htdp:text "*" 75 "red") (- (gameObject-x (list-ref sortedObjects (first (first indexOfSelectedGameObjects)))) 60) (+ (gameObject-y (list-ref sortedObjects (first (first indexOfSelectedGameObjects)))) 102) 0.5 4))))))
+              ((equal? currentTurn 2)
+               (cond
+                 ((not (equal? (second (second indexOfSelectedGameObjects)) 10))
+                  (cond
+                    ((equal? (length (temp-lst tmp)) 0)
+                     (addObject (htdp:text "*" 75 "red") (- (gameObject-x (list-ref sortedObjects (second (second indexOfSelectedGameObjects)))) 60) (+ (gameObject-y (list-ref sortedObjects (second (second indexOfSelectedGameObjects)))) 102) 0.5 4)))))))
+               ))
         (refreshBoard)(convertCoordsReset)))
       
                                                       
@@ -280,13 +313,13 @@
                          (begin (send handFrame show #f)
                                 (cond
                                   ((equal? currentTurn 1)
-                                   (if (not (equal? (config:spellStruct-name config:activeSpell) "none")) (cancelSpell) #f)
+                                   (if (not (equal? (config:spellStruct-effect config:activeSpell) "none")) (cancelSpell) #f)
                                    (for ([i (length creaturesPlayer1)])
                                      (when (equal? (send (send (list-ref creaturesPlayer1 i) get-card) get-sleep) #t)
                                        (send (send (list-ref creaturesPlayer1 i) get-card) set-sleep #f)))
                                    (send btnDmgPlayer set-label "Attack Player 1"))
                                   ((equal? currentTurn 2)
-                                   (if (not (equal? (config:spellStruct-name config:activeSpell) "none")) (cancelSpell) #f)
+                                   (if (not (equal? (config:spellStruct-effect config:activeSpell) "none")) (cancelSpell) #f)
                                    (for ([i (length creaturesPlayer2)])
                                      (when (equal? (send (send (list-ref creaturesPlayer2 i) get-card) get-sleep) #t)
                                        (send (send (list-ref creaturesPlayer2 i) get-card) set-sleep #f)))
@@ -296,7 +329,12 @@
                                            ((equal? (gameObject-y (list-ref sortedObjects i)) config:currentPlayerY)
                                             (set-gameObject-y! (list-ref sortedObjects i) config:enemyPlayerY))
                                            ((equal? (gameObject-y (list-ref sortedObjects i)) config:enemyPlayerY)
-                                            (set-gameObject-y! (list-ref sortedObjects i) config:currentPlayerY))))
+                                            (set-gameObject-y! (list-ref sortedObjects i) config:currentPlayerY)))
+                                  (when (and (equal? (gameObject-layer (list-ref sortedObjects i)) 4)(equal? (gameObject-player (list-ref sortedObjects i)) 3))
+                                        (set-temp-lst! tmp (append (temp-lst tmp) (list (- i (length (temp-lst tmp))))))))
+                                (for ([i (length (temp-lst tmp))])
+                                  (removeObject (list-ref (temp-lst tmp) i)))
+                                (set-temp-lst! tmp '())
                                 (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                 (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                                 (endTurn manaDisplay playerDisplay) (refreshBoard)))])
@@ -603,6 +641,10 @@
 (define creaturesRemoved (count 0))
 
 (define attack (λ (attacker defender)
+                 (for ([i (length sortedObjects)])
+                   (when (equal? (gameObject-layer (list-ref sortedObjects i)) 4)
+                     (removeObject i))
+                   )
               (set! sortedObjects (sortObjects))(set! sortedObjects (sortObjectsPhase2))(set! creatureObjects (sortCreatureObjects))
               (cond
                 ((equal? (send attacker get-sleep) #f)
