@@ -33,9 +33,9 @@
 (define paladinEffect (λ (player)
                         (cond
                           ((equal? player 1)
-                           (config:playerDamage -3 1))
+                           (config:playerDamage -3 2))
                           ((equal? player 2)
-                           (config:playerDamage -3 2)))))
+                           (config:playerDamage -3 1)))))
 
 (addCard (new spell% [name "Lightning"] [mana 1] [image "Lightning.png"] [effect lightningEffect]))
 (addCard (new creature% [name "Vicious Beaver"] [mana 1] [attack 2] [life 1] [image "Vicious Beaver.png"]))

@@ -327,7 +327,8 @@
                                                                      (when (equal? 200 (gameObject-y (list-ref sortedObjects i)))
                                                                        (set-temp-lst! tmp (append (temp-lst tmp) (list (- i (length (temp-lst tmp)))))))))
                                                                  (for ([i (length (temp-lst tmp))])
-                                                                   (removeObject (list-ref (temp-lst tmp) i))) (P1winMsg)) #f))]))
+                                                                   (removeObject (list-ref (temp-lst tmp) i))) (P1winMsg)) #f)
+                                      (send canvas on-paint)(send canvas show #t))]))
   
 (define manaDisplay (new message% [parent frame] [label (string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana)))]))
 (define playerDisplay (new message% [parent frame] [label (string-append "Player: " (number->string currentTurn) "'s turn.")]))
@@ -687,7 +688,9 @@
                        (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                        (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))
                    ((equal? (send attacker get-sleep) #t) #f))
-                 (set! sortedObjects (sortObjects))(set! sortedObjects (sortObjectsPhase2))(set! creatureObjects (sortCreatureObjects))(sortPlayer1ObjectIndex)(sortPlayer2ObjectIndex)))
+                 (set! sortedObjects (sortObjects))(set! sortedObjects (sortObjectsPhase2))(set! creatureObjects (sortCreatureObjects))(sortPlayer1ObjectIndex)(sortPlayer2ObjectIndex)
+                 (send player1LifeDisplay set-label (string-append "P1 Health: " (number->string config:P1Health)))
+                 (send player2LifeDisplay set-label (string-append "P2 Health: " (number->string config:P2Health)))))
 
 (define displayCreatureLife (λ ([gameObj '()] [creature '()] [creatureObj '()])
                               (removeCreatureLifeDisplay)
