@@ -33,7 +33,6 @@
                        (send dc draw-bitmap logo 0 0)
                          result))))
 
-(define healthDisplays '())
 (define objects '())
 (define sortedObjects '())
 (define player1ObjectIndex '())
@@ -202,11 +201,20 @@
                              (config:set-spellStruct-effect! config:activeSpell "none") (config:set-spellStruct-name! config:activeSpell "none") (config:set-spellStruct-num! config:activeSpell "none")
                              (if (>= 0 (send (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card) get-life))
                                  (begin
+                                   (cond
+                                     ((equal? (send (send (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-name) "Cultist")
+                                      (P2drawCard))
+                                     ((not (equal? (send (send (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-death-effect) "none"))
+                                      ((send (send (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-death-effect) 2)
+                                      ))
                                    (removeObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
                                    (set! creaturesPlayer2 (remove (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer2))
                                    (removeCreatureObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
                                    (displayCreatureLife)
-                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10))) (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10)))) #f))
+                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10))) (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))
+                                 (begin
+                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10)))
+                                   (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))))
                            ((not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
                             (attack (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player1SelectedEnemyCreature selectedCreatureObjects) get-card)))))))))))
               ((equal? currentTurn 2)
@@ -232,11 +240,20 @@
                              (config:set-spellStruct-effect! config:activeSpell "none") (config:set-spellStruct-name! config:activeSpell "none") (config:set-spellStruct-num! config:activeSpell "none")
                              (if (>= 0 (send (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card) get-life))
                                  (begin
+                                   (cond
+                                     ((equal? (send (send (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-name) "Cultist")
+                                      (P1drawCard))
+                                     ((not (equal? (send (send (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-death-effect) "none"))
+                                      ((send (send (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) get-card) get-death-effect) 1)
+                                      ))
                                    (removeObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
                                    (set! creaturesPlayer1 (remove (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer1))
                                    (removeCreatureObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
                                    (displayCreatureLife)
-                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10))) (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10)))) #f))
+                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10))) (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))
+                                 (begin
+                                   (set! selectedCreatureObjects (list (list 10 10) (list 10 10)))
+                                   (set! indexOfSelectedGameObjects (list (list 10 10) (list 10 10))))))
                            ((not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) config:noCreature))
                             (attack (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) (send (config:player2SelectedEnemyCreature selectedCreatureObjects) get-card))))))))))))))
         (refreshBoard)(convertCoordsReset)))
@@ -246,21 +263,17 @@
 
 (define canvas (new bitmap-canvas% [parent frame] [bitmap logo] [bitmap-scale 1] [min-height 600]))
 
-; Make a static text message in the frame
-(define msg (new message% [parent frame]
-                          [label "No events so far..."]))
-
-(define bottomFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
-
-(new button% [parent bottomFrame]
+(define bottomFrame (new horizontal-panel% [parent frame] [alignment '(center bottom)]))
+(define bottomLeftFrame (new horizontal-panel% [parent frame] [alignment '(right bottom)]))
+(new button% [parent bottomLeftFrame]
              [label "Play Card"]
              [horiz-margin 5])
-(new button% [parent bottomFrame]
+(new button% [parent bottomLeftFrame]
              [label "Show Hand"]
              [horiz-margin 5]
              [callback (lambda (button event)
                          (send handFrame show #t))])
-(new button% [parent bottomFrame]
+(new button% [parent bottomLeftFrame]
              [label "End Turn"]
              [horiz-margin 5]
              [callback (lambda (button event)
@@ -295,12 +308,14 @@
                                          (if (not (equal? (config:player1SelectedFriendlyCreature selectedCreatureObjects) 10))
                                              (if (equal? #f (send (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) get-sleep))
                                                  (begin (config:playerDamage (send (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) get-attack) currentTurn)
-                                                        (send (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) set-sleep #t)) #f) #f))
+                                                        (send (send (config:player1SelectedFriendlyCreature selectedCreatureObjects) get-card) set-sleep #t)
+                                                        (send player2LifeDisplay set-label (string-append "P2 Health: " (number->string config:P2Health)))) #f) #f))
                                         ((equal? currentTurn 2)
                                          (if (not (equal? (config:player2SelectedFriendlyCreature selectedCreatureObjects) 10))
                                              (if (equal? #f (send (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) get-sleep))
                                                  (begin (config:playerDamage (send (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) get-attack) currentTurn)
-                                                        (send (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) set-sleep #t)) #f) #f)))
+                                                        (send (send (config:player2SelectedFriendlyCreature selectedCreatureObjects) get-card) set-sleep #t)
+                                                        (send player1LifeDisplay set-label (string-append "P1 Health: " (number->string config:P1Health)))) #f) #f)))
                                       (if (>= 0 config:P1Health) (begin (for ([i (length sortedObjects)])
                                                                    (when (or (equal? 1 (gameObject-layer (list-ref sortedObjects i)))(equal? 2 (gameObject-layer (list-ref sortedObjects i))))
                                                                      (when (equal? 200 (gameObject-y (list-ref sortedObjects i)))
@@ -316,6 +331,8 @@
   
 (define manaDisplay (new message% [parent frame] [label (string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana)))]))
 (define playerDisplay (new message% [parent frame] [label (string-append "Player: " (number->string currentTurn) "'s turn.")]))
+(define player1LifeDisplay (new message% [parent bottomFrame] [label (string-append "P1 Health: " (number->string config:P1Health))] [horiz-margin 200]))
+(define player2LifeDisplay (new message% [parent bottomFrame] [label (string-append "P2 Health: " (number->string config:P2Health))] [horiz-margin 200]))
 (define P1winMsg (λ () (addObject (htdp:text "Player 1 Wins!" 140 "black") 0 100 0.5 1)))
 (define P2winMsg (λ () (addObject (htdp:text "Player 2 Wins!" 140 "black") 0 100 0.5 1)))
 
@@ -328,12 +345,14 @@
 (define menu-about (new menu%
      (label "&About")
      (parent menu-bar)))
+
+(define l (list 10))
 (define choice1 (new menu-item%
                      [parent menu-game] [label "New Game"] [callback (lambda (button event)
-                         (send msg set-label "Button click"))]))
+                         (set! l l))]))
 (define documentation (new menu-item%
                      [parent menu-about] [label "Documentation"] [callback (lambda (button event)
-                         (send msg set-label "Docs"))]))
+                         (set! l l))]))
 
 (define startGUI (λ ()
                    (send frame show #t)))
@@ -528,6 +547,7 @@
                                    ))
                                 (set-mana-currentMana! P1Mana (- (mana-currentMana P1Mana) cardMana))
                                 (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P1Mana)) "/" (number->string (mana-manaCap P1Mana))))
+                                (send player1LifeDisplay set-label (string-append "P1 Health: " (number->string config:P1Health)))
                                 (send hand-canvas on-paint)
                                 (send hand-canvas show #t)
                                 (refreshBoard)))))
@@ -557,11 +577,27 @@
                                    ))
                                 (set-mana-currentMana! P2Mana (- (mana-currentMana P2Mana) cardMana))
                                 (send manaDisplay set-label(string-append "mana:" (number->string (mana-currentMana P2Mana)) "/" (number->string (mana-manaCap P2Mana))))
+                                (send player2LifeDisplay set-label (string-append "P2 Health: " (number->string config:P2Health)))
                                 (send hand-canvas on-paint)
                                 (send hand-canvas show #t)
                                 (refreshBoard)))))
-                          ((< (mana-currentMana P2Mana) cardMana) #f))))
-                           )))
+                          ((< (mana-currentMana P2Mana) cardMana) #f)))))
+                      (if (>= 0 config:P1Health)
+                          (begin
+                            (for ([i (length sortedObjects)])
+                              (when (or (equal? 1 (gameObject-layer (list-ref sortedObjects i)))(equal? 2 (gameObject-layer (list-ref sortedObjects i))))
+                                (when (equal? 200 (gameObject-y (list-ref sortedObjects i)))
+                                  (set-temp-lst! tmp (append (temp-lst tmp) (list (- i (length (temp-lst tmp)))))))))
+                            (for ([i (length (temp-lst tmp))])
+                              (removeObject (list-ref (temp-lst tmp) i))) (P2winMsg)) #f)
+                      (if (>= 0 config:P2Health)
+                          (begin
+                            (for ([i (length sortedObjects)])
+                              (when (or (equal? 1 (gameObject-layer (list-ref sortedObjects i)))(equal? 2 (gameObject-layer (list-ref sortedObjects i))))
+                                (when (equal? 200 (gameObject-y (list-ref sortedObjects i)))
+                                  (set-temp-lst! tmp (append (temp-lst tmp) (list (- i (length (temp-lst tmp)))))))))
+                            (for ([i (length (temp-lst tmp))])
+                              (removeObject (list-ref (temp-lst tmp) i))) (P1winMsg)) #f)))
 (struct count (c) #:mutable)
 (define creaturesRemoved (count 0))
 
@@ -572,23 +608,38 @@
                     (cond
                       ((equal? currentTurn 1)
                        (if (>= (send attacker get-attack) (send defender get-life))
-                           (begin (removeObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
-                                  (set! creaturesPlayer2 (remove (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer2))
-                                  (removeCreatureObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
-                                  (displayCreatureLife))
-                           (begin (send defender set-life (- (send defender get-life) (send attacker get-attack)))
-                                  (displayCreatureLife (list-ref sortedObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) defender (second (first selectedCreatureObjects)))
+                           (begin
+                             (cond
+                               ((equal? (send defender get-name) "Cultist")
+                                (P2drawCard))
+                               ((not (equal? (send defender get-death-effect) "none"))
+                                ((send defender get-death-effect) 2)
+                                ))
+                             (removeObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
+                             (set! creaturesPlayer2 (remove (list-ref creatureObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer2))
+                             (removeCreatureObject (config:player1SelectedEnemyCreature indexOfSelectedGameObjects))
+                             (displayCreatureLife))
+                           (begin
+                             (send defender set-life (- (send defender get-life) (send attacker get-attack)))
+                             (displayCreatureLife (list-ref sortedObjects (config:player1SelectedEnemyCreature indexOfSelectedGameObjects)) defender (second (first selectedCreatureObjects)))
                                   ))
                        (set! sortedObjects (sortObjects))(set! sortedObjects (sortObjectsPhase2))(set! creatureObjects (sortCreatureObjects))(sortPlayer1ObjectIndex)(sortPlayer2ObjectIndex)
                        (if (>= (send defender get-attack) (send attacker get-life))
                            (begin
+                             (cond
+                               ((equal? (send attacker get-name) "Cultist")
+                                (P1drawCard))
+                               ((not (equal? (send attacker get-death-effect) "none"))
+                                ((send attacker get-death-effect) 1)
+                                ))
                              (removeObject (config:player1SelectedFriendlyCreature indexOfSelectedGameObjects))
                              (set! creaturesPlayer1 (remove (list-ref creatureObjects (config:player1SelectedFriendlyCreature indexOfSelectedGameObjects)) creaturesPlayer1))
                              (removeCreatureObject (config:player1SelectedFriendlyCreature indexOfSelectedGameObjects))
                              (displayCreatureLife))
-                           (begin (send attacker set-life (- (send attacker get-life) (send defender get-attack)))
-                                  (displayCreatureLife (list-ref sortedObjects (config:player1SelectedFriendlyCreature indexOfSelectedGameObjects)) attacker (config:player1SelectedFriendlyCreature selectedCreatureObjects))
-                                  (send attacker set-sleep #t)
+                           (begin
+                             (send attacker set-life (- (send attacker get-life) (send defender get-attack)))
+                             (displayCreatureLife (list-ref sortedObjects (config:player1SelectedFriendlyCreature indexOfSelectedGameObjects)) attacker (config:player1SelectedFriendlyCreature selectedCreatureObjects))
+                             (send attacker set-sleep #t)
                                   ))
                        (refreshBoard)
                        (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
@@ -598,25 +649,40 @@
                        (set! creatureObjects (sortCreatureObjects)))
                       ((equal? currentTurn 2)
                        (if (>= (send attacker get-attack) (send defender get-life))
-                           (begin (removeObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
-                                  (set! creaturesPlayer1 (remove (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer1))
-                                  (removeCreatureObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
-                                  (displayCreatureLife)
-                                  (set-count-c! creaturesRemoved 1))
-                           (begin (send defender set-life (- (send defender get-life) (send attacker get-attack)))
-                                  (displayCreatureLife (list-ref sortedObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) defender (config:player2SelectedEnemyCreature selectedCreatureObjects))
-                                  (set-count-c! creaturesRemoved 0)))
+                           (begin
+                             (cond
+                               ((equal? (send defender get-name) "Cultist")
+                                (P1drawCard))
+                               ((not (equal? (send defender get-death-effect) "none"))
+                                ((send defender get-death-effect) 1)
+                                ))
+                             (removeObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
+                             (set! creaturesPlayer1 (remove (list-ref creatureObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) creaturesPlayer1))
+                             (removeCreatureObject (config:player2SelectedEnemyCreature indexOfSelectedGameObjects))
+                             (displayCreatureLife)
+                             (set-count-c! creaturesRemoved 1))
+                           (begin
+                             (send defender set-life (- (send defender get-life) (send attacker get-attack)))
+                             (displayCreatureLife (list-ref sortedObjects (config:player2SelectedEnemyCreature indexOfSelectedGameObjects)) defender (config:player2SelectedEnemyCreature selectedCreatureObjects))
+                             (set-count-c! creaturesRemoved 0)))
                        (set! sortedObjects (sortObjects))(set! sortedObjects (sortObjectsPhase2))(set! creatureObjects (sortCreatureObjects))(sortPlayer1ObjectIndex)(sortPlayer2ObjectIndex)
                        (if (>= (send defender get-attack) (send attacker get-life))
                            (begin
+                             (cond
+                               ((equal? (send attacker get-name) "Cultist")
+                                (P2drawCard))
+                               ((not (equal? (send attacker get-death-effect) "none"))
+                                ((send attacker get-death-effect) 2)
+                                ))
                              (removeObject (- (config:player2SelectedFriendlyCreature indexOfSelectedGameObjects) (count-c creaturesRemoved)))
                              (set! creaturesPlayer2 (remove (list-ref creatureObjects (- (config:player2SelectedFriendlyCreature indexOfSelectedGameObjects) (count-c creaturesRemoved))) creaturesPlayer2))
                              (removeCreatureObject (- (config:player2SelectedFriendlyCreature indexOfSelectedGameObjects) (count-c creaturesRemoved)))
                              (displayCreatureLife))
-                           (begin (send attacker set-life (- (send attacker get-life) (send defender get-attack)))
-                                  (displayCreatureLife (list-ref sortedObjects (- (config:player2SelectedFriendlyCreature indexOfSelectedGameObjects) (count-c creaturesRemoved))) attacker (config:player2SelectedFriendlyCreature selectedCreatureObjects))
-                                  (send attacker set-sleep #t)
-                                  ))
+                           (begin
+                             (send attacker set-life (- (send attacker get-life) (send defender get-attack)))
+                             (displayCreatureLife (list-ref sortedObjects (- (config:player2SelectedFriendlyCreature indexOfSelectedGameObjects) (count-c creaturesRemoved))) attacker (config:player2SelectedFriendlyCreature selectedCreatureObjects))
+                             (send attacker set-sleep #t)
+                             ))
                        (refreshBoard)
                        (set! indexOfSelectedGameObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature)))
                        (set! selectedCreatureObjects (list (list config:noCreature config:noCreature) (list config:noCreature config:noCreature))))))

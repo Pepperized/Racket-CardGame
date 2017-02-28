@@ -19,9 +19,9 @@
 (define impEffect (λ (turn)
                     (cond
                       ((equal? turn 1)
-                       (config:playerDamage 3 1))
+                       (config:playerDamage 3 2))
                       ((equal? turn 2)
-                       (config:playerDamage 3 2)))))
+                       (config:playerDamage 3 1)))))
 
 (define archerEffect (λ (turn)
                        (config:set-spellStruct-num! config:activeSpell 1)
@@ -30,6 +30,12 @@
                           (config:set-spellStruct-num! config:activeSpell 2)
                           (config:set-spellStruct-effect! config:activeSpell dealDamage)
                           (config:set-spellStruct-name! config:activeSpell "Lightning")))
+(define paladinEffect (λ (player)
+                        (cond
+                          ((equal? player 1)
+                           (config:playerDamage -3 1))
+                          ((equal? player 2)
+                           (config:playerDamage -3 2)))))
 
 (addCard (new spell% [name "Lightning"] [mana 1] [image "Lightning.png"] [effect lightningEffect]))
 (addCard (new creature% [name "Vicious Beaver"] [mana 1] [attack 2] [life 1] [image "Vicious Beaver.png"]))
@@ -42,7 +48,7 @@
 (addCard (new creature% [name "Priestess"] [mana 2] [attack 2] [life 2] [image "Priestess.png"]))
 (addCard (new spell% [name "Assassinate"] [image "Assassinate.png"]))
 (addCard (new creature% [name "Cultist"] [mana 3] [attack 4] [life 2] [image "Cultist.png"]))
-(addCard (new creature% [name "Paladin"] [mana 3] [attack 3] [life 4] [image "Paladin.png"]))
+(addCard (new creature% [name "Paladin"] [mana 3] [attack 3] [life 4] [image "Paladin.png"] [death-effect paladinEffect]))
 (addCard (new spell% [name "Lava Flow"] [mana 4] [image "Lava Flow.png"]))
 
 (define getCard (λ (name [card-list cards]) (cond
